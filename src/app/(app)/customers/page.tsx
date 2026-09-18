@@ -14,24 +14,24 @@ export default async function CustomersPage(props: PageProps<"/customers">) {
 
   return (
     <>
-      <PageHeader title="Customers" actions={<Link href="/customers/new" className="btn">New customer</Link>} />
+      <PageHeader title="Customers" subtitle="Contact details and buying context, ready for your next conversation." actions={<Link href="/customers/new" className="btn">New customer</Link>} />
       <form className="mb-4 flex gap-2">
-        <input name="q" defaultValue={q} placeholder="Search name, email, phone" className="input max-w-sm" />
+        <input aria-label="Search customers by name, email or phone" type="search" name="q" defaultValue={q} placeholder="Search name, email, phone" className="input max-w-sm" />
         <button className="btn-secondary" type="submit">Search</button>
       </form>
       <Card>
         {rows.length === 0 ? (
-          <Empty>{q ? "No customers match." : "No customers yet."}</Empty>
+          <Empty>{q ? <>No customers match. <Link href="/customers" className="underline">Clear the search</Link> or try a different name, email or phone.</> : <>No customers yet. <Link href="/customers/new" className="underline">Add your first customer</Link> to start a conversation.</>}</Empty>
         ) : (
-          <table className="w-full text-sm">
+          <table className="responsive-table w-full text-sm">
             <thead className="text-left text-xs text-neutral-500">
-              <tr><th className="py-1">Name</th><th>Market</th><th>Language</th><th>Logistics</th><th>Updated</th></tr>
+              <tr><th scope="col" className="py-1">Name</th><th scope="col">Market</th><th scope="col">Language</th><th scope="col">Logistics</th><th scope="col">Updated</th></tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {rows.map((c) => (
                 <tr key={c.id}>
-                  <td className="py-2"><Link href={`/customers/${c.id}`} className="font-medium hover:underline">{c.full_name}</Link><div className="text-xs text-neutral-500">{c.email} {c.phone}</div></td>
-                  <td>{c.customer_market}</td><td>{c.preferred_language}</td><td>{c.purchase_logistics}</td><td><DateText value={c.updated_at} /></td>
+                  <td data-label="Name" className="py-2"><Link href={`/customers/${c.id}`} className="font-medium hover:underline">{c.full_name}</Link><div className="text-xs text-neutral-500">{c.email} {c.phone}</div></td>
+                  <td data-label="Market">{c.customer_market}</td><td data-label="Language">{c.preferred_language}</td><td data-label="Logistics">{c.purchase_logistics}</td><td data-label="Updated"><DateText value={c.updated_at} /></td>
                 </tr>
               ))}
             </tbody>

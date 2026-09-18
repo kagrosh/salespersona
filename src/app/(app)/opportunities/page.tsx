@@ -21,7 +21,7 @@ export default async function OpportunitiesPage(props: PageProps<"/opportunities
     supabase.from("activities").select("opportunity_id, occurred_at").eq("workspace_id", workspaceId).not("opportunity_id", "is", null).order("occurred_at", { ascending: false }).limit(5000),
     supabase.from("tasks").select("opportunity_id, due_at, action").eq("workspace_id", workspaceId).eq("state", "open").not("opportunity_id", "is", null).order("due_at", { ascending: true, nullsFirst: false }),
     // Only the ask of each latest non-failed run is needed; PostgREST JSON path selection keeps the payload small.
-    supabase.from("strategy_runs").select("opportunity_id, created_at, ask:result->nextMove->>customerCommitment").eq("workspace_id", workspaceId).neq("status", "failed").order("created_at", { ascending: false }).limit(2000),
+    supabase.from("strategy_runs").select("opportunity_id, created_at, status, ask:result->nextMove->>customerCommitment").eq("workspace_id", workspaceId).neq("status", "failed").order("created_at", { ascending: false }).limit(2000),
   ]);
   const rows = (data ?? []) as Row[];
   const now = new Date().getTime();
@@ -29,6 +29,8 @@ export default async function OpportunitiesPage(props: PageProps<"/opportunities
   for (const a of (acts.data ?? []) as { opportunity_id: string; occurred_at: string }[]) if (!lastActivity.has(a.opportunity_id)) lastActivity.set(a.opportunity_id, a.occurred_at);
   const nextTask = new Map<string, { due_at: string | null; action: string }>();
   for (const t of (tasks.data ?? []) as { opportunity_id: string; due_at: string | null; action: string }[]) if (!nextTask.has(t.opportunity_id)) nextTask.set(t.opportunity_id, t);
+  const freshness = new Map<string, { status: string; created_at: string }>();
+  for (const r of (runs.data ?? []) as { opportunity_id: string; status: string; created_at: string }[]) if (!freshness.has(r.opportunity_id)) freshness.set(r.opportunity_id, r);
   const ask = new Map<string, string>();
   for (const r of (runs.data ?? []) as unknown as { opportunity_id: string; ask: string | null }[]) if (!ask.has(r.opportunity_id) && r.ask) ask.set(r.opportunity_id, r.ask);
   const days = (o: Row) => daysSince(lastActivity.get(o.id) ?? null, now);
@@ -36,7 +38,7 @@ export default async function OpportunitiesPage(props: PageProps<"/opportunities
 
   const counts = new Map<string, number>();
   for (const r of rows) counts.set(r.stage, (counts.get(r.stage) ?? 0) + 1);
-  const chip = (href: string, active: boolean, label: string) => <Link href={href} className={`rounded-md px-3 py-1 ${active ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`}>{label}</Link>;
+  const chip = (href: string, active: boolean, label: string) => <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`inline-flex min-h-10 items-center rounded-full border border-neutral-200 px-3 py-2 ${active ? "bg-accent-700 text-white" : "hover:bg-neutral-100"}`}>{label}</Link>;
   const sortQs = sort === "updated" ? "&sort=updated" : "";
 
   return (
@@ -47,10 +49,10 @@ export default async function OpportunitiesPage(props: PageProps<"/opportunities
         {PIPELINE_STAGES.map((s) => chip(`/opportunities?stage=${s}${sortQs}`, stage === s, `${PIPELINE_LABELS[s]}${!stage && counts.get(s) ? ` (${counts.get(s)})` : ""}`))}
       </div>
       <Card>
-        {sorted.length === 0 ? <Empty>No opportunities{stage ? " in this stage" : ""}.</Empty> : (
+        {sorted.length === 0 ? <Empty>No opportunities{stage ? " in this stage" : ""}. {stage ? <Link href="/opportunities" className="underline">View all stages</Link> : <Link href="/opportunities/new" className="underline">Create an opportunity</Link>} to choose your next move.</Empty> : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-xs text-neutral-500"><tr><th className="py-1">Opportunity</th><th>Customer</th><th>Stage</th><th>Last contact</th><th>Next task</th><th>Current ask</th><th>Blocker / outcome</th></tr></thead>
+            <table className="responsive-table w-full text-sm">
+              <thead className="text-left text-xs text-neutral-500"><tr><th scope="col" className="py-1">Opportunity</th><th scope="col">Customer</th><th scope="col">Stage</th><th scope="col">Last contact</th><th scope="col">Next task</th><th scope="col">Current ask</th><th scope="col">Blocker / outcome</th></tr></thead>
               <tbody className="divide-y divide-neutral-100 align-top">
                 {sorted.map((o) => {
                   const t = nextTask.get(o.id);
@@ -58,13 +60,13 @@ export default async function OpportunitiesPage(props: PageProps<"/opportunities
                   const overdue = t?.due_at && new Date(t.due_at).getTime() < now;
                   return (
                     <tr key={o.id}>
-                      <td className="py-2"><Link href={`/opportunities/${o.id}`} className="font-medium hover:underline">{o.title}</Link><div className="text-xs text-neutral-500">{o.track} · {o.readiness}</div></td>
-                      <td><Link href={`/customers/${o.customer_id}`} className="hover:underline">{o.customers?.full_name}</Link></td>
-                      <td><StageBadge stage={o.stage} /></td>
-                      <td><DaysAgo days={days(o)} warnAfter={active ? STALL_DAYS : 10_000} never="never" /></td>
-                      <td>{t ? <span className={overdue ? "font-medium text-red-700" : ""}>{truncate(t.action, 40)} · <DateText value={t.due_at} />{overdue ? " · overdue" : ""}</span> : active ? <span className="font-medium text-red-700">none</span> : <span className="text-neutral-400">—</span>}</td>
-                      <td className="max-w-xs text-neutral-700">{ask.get(o.id) ? truncate(ask.get(o.id), 90) : <span className="text-neutral-400">no run yet</span>}</td>
-                      <td className="text-xs text-neutral-600">
+                      <td data-label="Opportunity" className="py-2"><Link href={`/opportunities/${o.id}`} className="font-medium hover:underline">{o.title}</Link><div className="text-xs text-neutral-500">{o.track} · {o.readiness}</div></td>
+                      <td data-label="Customer"><Link href={`/customers/${o.customer_id}`} className="hover:underline">{o.customers?.full_name}</Link></td>
+                      <td data-label="Stage"><StageBadge stage={o.stage} /></td>
+                      <td data-label="Last contact"><DaysAgo days={days(o)} warnAfter={active ? STALL_DAYS : 10_000} never="never" /></td>
+                      <td data-label="Next task">{t ? <span className={overdue ? "font-medium text-red-700" : ""}>{truncate(t.action, 40)} · <DateText value={t.due_at} />{overdue ? " · overdue" : ""}</span> : active ? <span className="font-medium text-red-700">none</span> : <span className="text-neutral-400">—</span>}</td>
+                      <td data-label="Current ask" className="max-w-xs text-neutral-700">{freshness.has(o.id) && <div className="mb-1"><span className={`badge ${freshness.get(o.id)?.status === "valid" ? "badge-good" : "badge-warn"}`}>{freshness.get(o.id)?.status === "valid" ? "current" : "stale · regenerate"}</span><span className="ml-1 text-xs"><DateText value={freshness.get(o.id)?.created_at} /></span></div>}{ask.get(o.id) ? truncate(ask.get(o.id), 90) : <span className="text-neutral-400">no run yet</span>}</td>
+                      <td data-label="Blocker / outcome" className="text-xs text-neutral-600">
                         {o.stage === "lost" ? <>{labelOf(LOST_REASONS, o.lost_reason)}{o.revisit_at ? ` · revisit ${o.revisit_at}` : ""}{o.refusal_scope === "contact" ? " · do not contact" : ""}</> : o.stage === "paused" ? <>paused until {o.paused_until ?? "?"}</> : o.current_objection ? labelOf(OBJECTIONS, o.current_objection) : "—"}
                       </td>
                     </tr>

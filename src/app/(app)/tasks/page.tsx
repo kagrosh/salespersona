@@ -20,7 +20,7 @@ export default async function TasksPage(props: PageProps<"/tasks">) {
       <PageHeader title="Follow-up tasks" subtitle="Your own reminders; never customer-facing deadlines." actions={<Link href={showDone ? "/tasks" : "/tasks?done=1"} className="btn-secondary">{showDone ? "Show open" : "Show completed"}</Link>} />
       {typeof sp.error === "string" && <div className="note-bad mb-3">{sp.error}</div>}
       <Card id="tasks">
-        {rows.length === 0 ? <Empty>No {showDone ? "completed" : "open"} tasks.</Empty> : (
+        {rows.length === 0 ? <Empty>No {showDone ? "completed" : "open"} tasks. {showDone ? <Link href="/tasks" className="underline">Review open tasks</Link> : <a href="#add-task" className="underline">Add the next action below</a>}.</Empty> : (
           <ul className="divide-y divide-neutral-100 text-sm">
             {rows.map((t) => {
               const overdue = !showDone && t.due_at && new Date(t.due_at).getTime() < now;
@@ -28,7 +28,7 @@ export default async function TasksPage(props: PageProps<"/tasks">) {
                 <li key={t.id} className="py-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium">{t.action}</div>
+                      <div className="font-medium">{t.action}</div><span className={`badge mt-1 ${overdue ? "badge-bad" : showDone ? "badge-good" : ""}`}>{showDone ? "completed" : overdue ? "overdue" : t.due_at ? "scheduled" : "no due date"}</span>
                       {t.purpose && <div className="text-neutral-600">{t.purpose}</div>}
                       <div className="text-xs text-neutral-500">
                         {t.opportunities && <Link href={`/opportunities/${t.opportunity_id}`} className="underline">{t.opportunities.title}</Link>}
@@ -59,7 +59,7 @@ export default async function TasksPage(props: PageProps<"/tasks">) {
         )}
       </Card>
       {!showDone && (
-        <Card title="Add a task" className="mt-4">
+        <Card id="add-task" title="Add a task" className="mt-4">
           <form action={createTask} className="grid gap-3 sm:grid-cols-4">
             <Field label="Action" className="sm:col-span-2"><input name="action" className="input" required /></Field>
             <Field label="Due"><input name="due_at" type="datetime-local" className="input" defaultValue={localInputValue(1)} /></Field>
