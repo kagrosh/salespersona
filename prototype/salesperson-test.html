@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Salesperson — strategy assistant test (rules-2.2.0)</title>
+<title>Salesperson — strategy assistant (rules-2.2.0)</title>
 <style>
   :root{--bg:#f6f7f9;--card:#fff;--ink:#16202a;--muted:#5b6774;--line:#e3e7ec;--accent:#1f6f5f;--accent-ink:#fff;--warn:#b45309;--warn-bg:#fff7ed;--bad:#b91c1c;--bad-bg:#fef2f2;--good:#166534;--good-bg:#f0fdf4;--quote:#eef3f1}
   *{box-sizing:border-box}
@@ -67,11 +67,36 @@
   .empty{color:var(--muted);font-style:italic}
   .footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);padding-top:8px;margin-top:14px}
   textarea.draft{min-height:120px;font-family:inherit}
+
+  /* --- friendlier layout: grouped, collapsible sections --- */
+  label small{font-weight:400;font-size:11px;color:var(--muted);margin-left:4px}
+  .group{margin-bottom:22px}
+  .group-h{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+  .group-h .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px}
+  details.section{padding:0}
+  details.section>summary{list-style:none;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 20px;cursor:pointer;color:var(--ink);font-size:15px}
+  details.section>summary::-webkit-details-marker{display:none}
+  details.section>summary::before{content:"";display:inline-block;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);margin-right:2px;transition:transform .15s;align-self:center}
+  details.section[open]>summary::before{transform:rotate(45deg)}
+  details.section>summary .t{font-weight:600}
+  details.section>summary .sub{font-size:13px;color:var(--muted);font-weight:400;flex:1;min-width:160px}
+  details.section>summary .count{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
+  details.section>summary .count.some{background:var(--good-bg);color:var(--good);border-color:#86efac}
+  details.section>.body{padding:4px 20px 18px}
+  .field.key label::after,.keytag{content:"key";display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 5px;margin-left:6px;vertical-align:middle;line-height:1.5}
+  .tour{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .tour em{font-style:normal;font-weight:600}
+  .tour button{margin-left:auto}
+  .runbar{position:sticky;bottom:0;background:var(--bg);padding:12px 0;border-top:1px solid var(--line);margin-top:0;z-index:1}
+  details.rsec{border-top:1px solid var(--line);margin-top:14px;padding-top:6px}
+  details.rsec>summary{font-size:15px;font-weight:600;color:var(--ink);padding:6px 0}
+  details.rsec>summary .n{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
+  .result-tools{display:flex;gap:8px;justify-content:flex-end;margin-bottom:6px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Salesperson — strategy assistant (test)</h1>
+  <h1>Salesperson — strategy assistant</h1>
   <span class="tag">Rule engine rules-2.2.0 · saved in this browser only · synthetic data · nothing is sent</span>
   <span class="toolbar" style="margin-left:auto">
     <select id="caseSelect" title="Saved cases"></select>
@@ -83,110 +108,131 @@
 
 <main>
 <div id="form">
-  <div class="card">
-    <h2>Customer</h2>
+  <div class="tour" id="tour">
+    <span><strong>Quick start.</strong> Press <em>Load demo</em>, then <em>Generate strategy</em>, then change any field and generate again to see how the advice moves.
+    Fields marked <span class="keytag">key</span> matter most; every other section refines the answer and can wait. Nothing you type leaves this browser.</span>
+    <button class="tiny secondary" id="tourClose">Got it</button>
+  </div>
+  <section class="group">
+    <div class="group-h"><span class="num">1</span>Who you are selling to</div>
+  <details class="card section" open data-section="Customer">
+    <summary title="Customer"><span class="t">Customer</span><span class="sub">Who they are and how they buy</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
-      <div class="field"><label>Customer name</label><input data-k="customer.name" placeholder="e.g. A. Demir (synthetic)"></div>
+      <div class="field key"><label>Customer name</label><input data-k="customer.name" placeholder="e.g. A. Demir (synthetic)"></div>
       <div class="field"><label>Customer market</label><select data-k="customer.market"><option value="unknown">Unknown</option><option value="turkish">Turkish</option><option value="international">International</option></select></div>
-      <div class="field"><label>Preferred sales language</label><select data-k="customer.language"><option value="en">English</option><option value="tr">Türkçe</option><option value="other">Other (draft in English)</option></select></div>
+      <div class="field key"><label>Preferred sales language</label><select data-k="customer.language"><option value="en">English</option><option value="tr">Türkçe</option><option value="other">Other (draft in English)</option></select></div>
       <div class="field"><label>Purchase logistics</label><select data-k="customer.logistics"><option value="unknown">Unknown</option><option value="local">Buying in person / locally</option><option value="remote">Buying remotely / from abroad</option><option value="mixed">Mixed: visits plus remote steps</option></select></div>
       <div class="field"><label>Investment experience</label><select data-k="customer.experience"><option value="unknown">Unknown</option><option value="first">First property investment</option><option value="some">Owns 1–2 properties</option><option value="experienced">Experienced investor</option></select></div>
     </div>
     <p class="hint">Market, language and logistics are separate fields. Nothing about the customer is inferred from nationality.</p>
-  </div>
-
-  <div class="card">
-    <h2>Deal state</h2>
+    </div>
+  </details>
+  <details class="card section" open data-section="Deal state">
+    <summary title="Deal state"><span class="t">Deal state</span><span class="sub">Where the deal stands right now</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
-      <div class="field"><label>Investment track</label><select data-k="track"><option value="home">Apartment / home</option><option value="land">Plot / land</option></select></div>
-      <div class="field"><label>Pipeline stage</label><select data-k="pipelineStage" data-opts="pipeline"></select></div>
-      <div class="field"><label>Customer readiness (stated)</label><select data-k="readiness"><option value="unknown">Unknown</option><option value="exploring">Exploring</option><option value="evaluating">Evaluating this option</option><option value="ready">Says they are ready to proceed</option><option value="paused">Asked to pause / not now</option><option value="refused">Explicitly declined</option></select></div>
-      <div class="field"><label>Funding status</label><select data-k="funding"><option value="unknown">Unknown</option><option value="stated">Stated by customer, not evidenced</option><option value="confirmed">Confirmed (proof seen)</option><option value="financing">Needs financing</option></select></div>
+      <div class="field key"><label>Investment track</label><select data-k="track"><option value="home">Apartment / home</option><option value="land">Plot / land</option></select></div>
+      <div class="field key"><label>Pipeline stage</label><select data-k="pipelineStage" data-opts="pipeline"></select></div>
+      <div class="field key"><label>Customer readiness <small>stated</small></label><select data-k="readiness"><option value="unknown">Unknown</option><option value="exploring">Exploring</option><option value="evaluating">Evaluating this option</option><option value="ready">Says they are ready to proceed</option><option value="paused">Asked to pause / not now</option><option value="refused">Explicitly declined</option></select></div>
+      <div class="field key"><label>Funding status</label><select data-k="funding"><option value="unknown">Unknown</option><option value="stated">Stated by customer, not evidenced</option><option value="confirmed">Confirmed (proof seen)</option><option value="financing">Needs financing</option></select></div>
       <div class="field"><label>Funding source</label><input data-k="fundingSource" placeholder="e.g. savings, sale of another property"></div>
       <div class="field"><label>Funding timing</label><input data-k="fundingTiming" placeholder="e.g. available now / after 15 Oct"></div>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>Project</h2>
+    </div>
+  </details>
+  </section>
+  <section class="group">
+    <div class="group-h"><span class="num">2</span>What is on the table</div>
+  <details class="card section" data-section="Project">
+    <summary title="Project"><span class="t">Project</span><span class="sub">The development or land the offer belongs to</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
       <div class="field"><label>Project name</label><input data-k="project.name" placeholder="e.g. Demo Residence"></div>
-      <div class="field"><label>Category (marketed)</label><select data-k="project.category" id="categorySel"></select></div>
+      <div class="field"><label>Category <small>marketed</small></label><select data-k="project.category" id="categorySel"></select></div>
       <div class="field"><label>Stage</label><select data-k="project.stage" id="stageSel"></select></div>
       <div class="field"><label>Property location / jurisdiction</label><input data-k="project.location" placeholder="City / country (not assumed)"></div>
-      <div class="field"><label>Permitted use (plots)</label><select data-k="project.permittedUseStatus" data-opts="doc"></select></div>
-      <div class="field"><label>Delivery milestones (ongoing homes)</label><select data-k="project.milestonesStatus" data-opts="doc"></select></div>
+      <div class="field"><label>Permitted use <small>plots</small></label><select data-k="project.permittedUseStatus" data-opts="doc"></select></div>
+      <div class="field"><label>Delivery milestones <small>ongoing homes</small></label><select data-k="project.milestonesStatus" data-opts="doc"></select></div>
     </div>
     <p class="hint">Marketed category is not documented permitted use. Ongoing homes are not completed homes.</p>
-  </div>
-
-  <div class="card">
-    <h2>Offer (the unit / plot on the table)</h2>
+    </div>
+  </details>
+  <details class="card section" open data-section="Offer">
+    <summary title="Offer (the unit / plot on the table)"><span class="t">Offer</span><span class="sub">The specific unit or plot on the table, its price and how fresh that check is</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
-      <div class="field"><label>Reference (blank = no option attached)</label><input data-k="offer.reference" placeholder="e.g. B-12"></div>
-      <div class="field"><label>Asking / quoted price</label><input data-k="offer.price" inputmode="decimal" placeholder="e.g. 110000"></div>
-      <div class="field"><label>Currency</label><select data-k="offer.currency" data-opts="currency"></select></div>
-      <div class="field"><label>Other acquisition costs (blank = unknown, never zero)</label><input data-k="offer.costs" inputmode="decimal" placeholder="taxes, notary, fees…"></div>
+      <div class="field"><label>Reference <small>blank = no option attached</small></label><input data-k="offer.reference" placeholder="e.g. B-12"></div>
+      <div class="field key"><label>Asking / quoted price</label><input data-k="offer.price" inputmode="decimal" placeholder="e.g. 110000"></div>
+      <div class="field key"><label>Currency</label><select data-k="offer.currency" data-opts="currency"></select></div>
+      <div class="field"><label>Other acquisition costs <small>blank = unknown, never zero</small></label><input data-k="offer.costs" inputmode="decimal" placeholder="taxes, notary, fees…"></div>
       <div class="field"><label>Availability</label><select data-k="offer.availability"><option value="unknown">Not checked</option><option value="available">Available (checked)</option><option value="reserved">Reserved by another party</option><option value="sold">Sold / unavailable</option></select></div>
-      <div class="field"><label>Price/availability checked … days ago (blank = never)</label><input data-k="offer.checkedDaysAgo" type="number" min="0" step="1" placeholder="e.g. 1"></div>
+      <div class="field"><label>Price/availability checked … days ago <small>blank = never</small></label><input data-k="offer.checkedDaysAgo" type="number" min="0" step="1" placeholder="e.g. 1"></div>
       <div class="field"><label>Documented count of comparable units left</label><input data-k="offer.availabilityCount" type="number" min="0" step="1" placeholder="blank = not documented"></div>
       <div class="field"><label>Source of that count</label><input data-k="offer.availabilitySource" placeholder="e.g. developer list, 14 Sep"></div>
       <div class="field"><label>Quote / terms valid until</label><input data-k="offer.validUntil" type="date"></div>
-      <div class="field"><label>Terms source (a deadline without a source is unusable)</label><input data-k="offer.termsSource" placeholder="e.g. written offer of 10 Sep"></div>
+      <div class="field"><label>Terms source <small>a deadline without a source is unusable</small></label><input data-k="offer.termsSource" placeholder="e.g. written offer of 10 Sep"></div>
       <div class="field"><label>Price list valid until</label><input data-k="offer.priceValidUntil" type="date"></div>
-      <div class="field"><label>Documented upcoming price change (with source)</label><input data-k="offer.priceChangeNote" placeholder="blank = none documented"></div>
+      <div class="field"><label>Documented upcoming price change <small>with source</small></label><input data-k="offer.priceChangeNote" placeholder="blank = none documented"></div>
       <div class="field"><label>Documented stage-linked payment note</label><input data-k="offer.stagePaymentNote" placeholder="blank = none documented"></div>
     </div>
     <h3>Alternatives currently available (for alternative-choice closes / unit swaps)</h3>
     <div id="alternatives"></div>
     <div class="actions"><button class="small secondary" data-add="alternatives">Add alternative</button><span class="hint">Record when each alternative was checked and when it was attached. An unchecked alternative is only “added to your options”, never “available”; an option attached after a loss is what justifies a win-back. Project blank = same project; stage decides “completed alternatives”.</span></div>
-  </div>
-
-  <div class="card">
-    <h2>Budget</h2>
+    </div>
+  </details>
+  <details class="card section" open data-section="Budget">
+    <summary title="Budget"><span class="t">Budget</span><span class="sub">What the customer says they can spend</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
-      <div class="field"><label>Budget amount</label><input data-k="budget.amount" inputmode="decimal" placeholder="e.g. 100000 (blank = no budget recorded)"></div>
-      <div class="field"><label>Upper amount (if a range was stated)</label><input data-k="budget.amountMax" inputmode="decimal" placeholder="blank = single figure"></div>
+      <div class="field key"><label>Budget amount</label><input data-k="budget.amount" inputmode="decimal" placeholder="e.g. 100000 (blank = no budget recorded)"></div>
+      <div class="field"><label>Upper amount <small>if a range was stated</small></label><input data-k="budget.amountMax" inputmode="decimal" placeholder="blank = single figure"></div>
       <div class="field"><label>Budget currency</label><select data-k="budget.currency" data-opts="currency"></select></div>
       <div class="field"><label>Budget scope</label><select data-k="budget.scope" data-opts="scope"></select></div>
       <div class="field"><label>Budget firmness</label><select data-k="budget.firmness"><option value="unknown">Unknown</option><option value="firm">Firm ceiling (stated)</option><option value="flexible">Flexible (stated)</option></select></div>
     </div>
     <details><summary>Recorded exchange-rate observation (only if budget and price currencies differ)</summary>
       <div class="grid" style="margin-top:8px">
-        <div class="field"><label>Rate (1 budget currency = ? offer currency)</label><input data-k="budget.fxRate" inputmode="decimal" placeholder="e.g. 1.08"></div>
+        <div class="field"><label>Rate <small>1 budget currency = ? offer currency</small></label><input data-k="budget.fxRate" inputmode="decimal" placeholder="e.g. 1.08"></div>
         <div class="field"><label>To currency</label><select data-k="budget.fxToCurrency" data-opts="currencyBlank"></select></div>
         <div class="field"><label>Observed on</label><input data-k="budget.fxDate" type="date"></div>
         <div class="field"><label>Source</label><input data-k="budget.fxSource" placeholder="e.g. ECB reference rate"></div>
       </div>
     </details>
     <p class="hint">Stated budget is not available funding. Comparison happens only when currency and scope match.</p>
-  </div>
-
-  <div class="card">
-    <h2>Objections</h2>
-    <div class="field"><label>Current explicit objection</label><select data-k="objection" data-opts="objection"></select></div>
-    <label>Resolved objections (already answered; not reopened)</label>
-    <div class="checks" id="resolvedObjections"></div>
-  </div>
-
-  <div class="card">
-    <h2>Negotiation (seller side; written authorization only)</h2>
+    </div>
+  </details>
+  <details class="card section" data-section="Negotiation">
+    <summary title="Negotiation (seller side; written authorization only)"><span class="t">Negotiation</span><span class="sub">What the seller has authorized in writing. Never shown to the customer</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
       <div class="field"><label>Negotiation room</label><select data-k="negotiation.room"><option value="unknown">Not confirmed with seller</option><option value="yes">Some authorized room / terms exist</option><option value="no">No room; price is final (recorded)</option></select></div>
-      <div class="field"><label>Authorized room amount (written)</label><input data-k="negotiation.authorizedRoom" inputmode="decimal" placeholder="blank = none confirmed"></div>
+      <div class="field"><label>Authorized room amount <small>written</small></label><input data-k="negotiation.authorizedRoom" inputmode="decimal" placeholder="blank = none confirmed"></div>
       <div class="field"><label>Authorized non-price terms</label><input data-k="negotiation.authorizedTerms" placeholder="e.g. furniture package, payment plan"></div>
       <div class="field"><label>Concessions already given</label><input data-k="negotiation.concessionsGiven" placeholder="blank = none"></div>
-      <div class="field"><label>Customer's counter-offer (the number they would sign at)</label><input data-k="negotiation.counterOffer" inputmode="decimal" placeholder="blank = not named"></div>
+      <div class="field"><label>Customer's counter-offer <small>the number they would sign at</small></label><input data-k="negotiation.counterOffer" inputmode="decimal" placeholder="blank = not named"></div>
       <div class="field"><label>Counter-offer currency</label><select data-k="negotiation.counterOfferCurrency" data-opts="currencyBlank"></select></div>
     </div>
     <p class="hint">The authorized floor is never revealed to the customer. No concession is proposed that the seller has not authorized in writing.</p>
-  </div>
-
-  <div class="card">
-    <h2>Qualification</h2>
+    </div>
+  </details>
+  </section>
+  <section class="group">
+    <div class="group-h"><span class="num">3</span>What the customer said and did</div>
+  <details class="card section" open data-section="Objections">
+    <summary title="Objections"><span class="t">Objections</span><span class="sub">What the customer is pushing back on</span><span class="count"></span></summary>
+    <div class="body">
+    <div class="field key"><label>Current explicit objection</label><select data-k="objection" data-opts="objection"></select></div>
+    <label>Resolved objections <small>already answered; not reopened</small></label>
+    <div class="checks" id="resolvedObjections"></div>
+    </div>
+  </details>
+  <details class="card section" data-section="Qualification">
+    <summary title="Qualification"><span class="t">Qualification</span><span class="sub">Timing, must-haves and who decides</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
       <div class="field"><label>Target decision date</label><input data-k="qualification.targetDecisionDate" type="date"></div>
-      <div class="field"><label>Target timing (if no date)</label><input data-k="qualification.targetTiming" placeholder="e.g. before year end"></div>
+      <div class="field"><label>Target timing <small>if no date</small></label><input data-k="qualification.targetTiming" placeholder="e.g. before year end"></div>
       <div class="field"><label>Why now</label><input data-k="qualification.whyNow" placeholder="customer's stated reason"></div>
       <div class="field"><label>Must-haves</label><input data-k="qualification.mustHaves" placeholder="e.g. 2+1, sea view"></div>
       <div class="field"><label>Nice-to-haves</label><input data-k="qualification.niceToHaves"></div>
@@ -197,70 +243,83 @@
       <div class="field"><label>Will visit before deciding?</label><select data-k="qualification.willVisitBeforeDeciding"><option value="unknown">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
       <div class="field"><label>Your desired immediate outcome</label><input data-k="qualification.desiredOutcome" placeholder="e.g. reservation this month"></div>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>Outcome (pause / lost / refusal)</h2>
+    </div>
+  </details>
+  <details class="card section" data-section="Assessment questions">
+    <summary title="Structured assessment (customer's stated answers)"><span class="t">Assessment questions</span><span class="sub">The customer's own answers to the standard questions</span><span class="count"></span></summary>
+    <div class="body">
+    <div class="grid" id="questions"></div>
+    </div>
+  </details>
+  <details class="card section" data-section="Behavior and words">
+    <summary title="Observed behavior, words and interpretation (kept separate)"><span class="t">Behavior and words</span><span class="sub">What you saw, what they said, what you think. Kept apart on purpose</span><span class="count"></span></summary>
+    <div class="body">
+    <div class="checks" id="behaviors"></div>
+    <div class="field" style="margin-top:8px"><label>Customer's exact words <small>quote, with date if known</small></label><textarea data-k="quote" placeholder='e.g. "I like the view but 110 is too much for me." (12 Sep)'></textarea></div>
+    <div class="field"><label>Salesperson interpretation <small>never mixed with facts</small></label><textarea data-k="interpretation"></textarea></div>
+    </div>
+  </details>
+  <details class="card section" data-section="Contact history">
+    <summary title="Contact history"><span class="t">Contact history</span><span class="sub">When you last spoke and what you asked for</span><span class="count"></span></summary>
+    <div class="body">
+    <div class="grid">
+      <div class="field"><label>Days since last contact <small>blank = never</small></label><input data-k="contact.daysSinceLastContact" type="number" min="0" step="1"></div>
+      <div class="field"><label>Last activity type</label><select data-k="contact.lastActivityType" data-opts="activity"></select></div>
+      <div class="field"><label>Days since the customer last responded <small>blank = never</small></label><input data-k="contact.daysSinceCustomerResponse" type="number" min="0" step="1"></div>
+    </div>
+    <h3>Commitment asks made</h3>
+    <div id="asks"></div>
+    <div class="actions"><button class="small secondary" data-add="asks">Add ask</button><span class="hint">An unanswered ask ≥ 2 days old triggers the silence playbook.</span></div>
+    </div>
+  </details>
+  <details class="card section" data-section="Pause, loss or refusal">
+    <summary title="Outcome (pause / lost / refusal)"><span class="t">Pause, loss or refusal</span><span class="sub">Only if the customer paused, declined, or the deal was lost</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
       <div class="field"><label>Paused until</label><input data-k="outcome.pausedUntil" type="date"></div>
       <div class="field"><label>Lost reason</label><select data-k="outcome.lostReason" data-opts="lostReason"></select></div>
-      <div class="field"><label>Lost … days ago (blank = date unknown)</label><input data-k="outcome.lostDaysAgo" type="number" min="0" step="1"></div>
+      <div class="field"><label>Lost … days ago <small>blank = date unknown</small></label><input data-k="outcome.lostDaysAgo" type="number" min="0" step="1"></div>
       <div class="field"><label>Refusal scope</label><select data-k="outcome.refusalScope" data-opts="refusalScope"></select></div>
       <div class="field"><label>Contact preference</label><input data-k="outcome.contactPreference" placeholder="e.g. email only, after October"></div>
       <div class="field"><label>Revisit condition</label><input data-k="outcome.revisitCondition" placeholder="what would reopen it"></div>
       <div class="field"><label>Revisit at</label><input data-k="outcome.revisitAt" type="date"></div>
     </div>
     <p class="hint">A lost deal is contacted again only with a recorded change dated after the loss (an option attached, verified evidence recorded, a documented price note) or on the agreed revisit date. Without a loss date nothing can be dated after it. A pause is explicit state (readiness or stage); a leftover revisit date never re-engages a live deal.</p>
-  </div>
-
-  <div class="card">
-    <h2>Structured assessment (customer's stated answers)</h2>
-    <div class="grid" id="questions"></div>
-  </div>
-
-  <div class="card">
-    <h2>Observed behavior, words and interpretation (kept separate)</h2>
-    <div class="checks" id="behaviors"></div>
-    <div class="field" style="margin-top:8px"><label>Customer's exact words (quote, with date if known)</label><textarea data-k="quote" placeholder='e.g. "I like the view but 110 is too much for me." (12 Sep)'></textarea></div>
-    <div class="field"><label>Salesperson interpretation (never mixed with facts)</label><textarea data-k="interpretation"></textarea></div>
-  </div>
-
-  <div class="card">
-    <h2>Contact history</h2>
-    <div class="grid">
-      <div class="field"><label>Days since last contact (blank = never)</label><input data-k="contact.daysSinceLastContact" type="number" min="0" step="1"></div>
-      <div class="field"><label>Last activity type</label><select data-k="contact.lastActivityType" data-opts="activity"></select></div>
-      <div class="field"><label>Days since the customer last responded (blank = never)</label><input data-k="contact.daysSinceCustomerResponse" type="number" min="0" step="1"></div>
     </div>
-    <h3>Commitment asks made</h3>
-    <div id="asks"></div>
-    <div class="actions"><button class="small secondary" data-add="asks">Add ask</button><span class="hint">An unanswered ask ≥ 2 days old triggers the silence playbook.</span></div>
-  </div>
-
-  <div class="card">
-    <h2>Project evidence records (claims and their status)</h2>
+  </details>
+  </section>
+  <section class="group">
+    <div class="group-h"><span class="num">4</span>Records and housekeeping</div>
+  <details class="card section" data-section="Evidence records">
+    <summary title="Project evidence records (claims and their status)"><span class="t">Evidence records</span><span class="sub">Claims about the project and whether each one is verified</span><span class="count"></span></summary>
+    <div class="body">
     <div id="evidence"></div>
     <div class="actions"><button class="small secondary" data-add="evidence">Add evidence</button><span class="hint">Only verified records are presented as facts. A method source never verifies a project fact. “Recorded … days ago” dates what changed since a loss or since the customer last responded.</span></div>
-  </div>
-
-  <div class="card">
-    <h2>Angles already tried</h2>
+    </div>
+  </details>
+  <details class="card section" data-section="Angles already tried">
+    <summary title="Angles already tried"><span class="t">Angles already tried</span><span class="sub">So the assistant never repeats an approach that already failed</span><span class="count"></span></summary>
+    <div class="body">
     <p class="hint">A failed angle is not repeated unless a material fact changed; two delays promote the direct question.</p>
     <div id="attempts"></div>
     <div class="actions"><button class="small secondary" data-add="attempts">Add attempt</button></div>
-  </div>
-
-  <div class="card">
-    <h2>Tasks</h2>
+    </div>
+  </details>
+  <details class="card section" data-section="Tasks">
+    <summary title="Tasks"><span class="t">Tasks</span><span class="sub">Open to-dos on this deal</span><span class="count"></span></summary>
+    <div class="body">
     <div class="grid">
       <div class="field"><label>Open tasks on this deal</label><input data-k="tasks.openCount" type="number" min="0" step="1"></div>
-      <div class="field"><label>Earliest task due in … days (blank = no date)</label><input data-k="tasks.nextDueInDays" type="number" min="0" step="1"></div>
+      <div class="field"><label>Earliest task due in … days <small>blank = no date</small></label><input data-k="tasks.nextDueInDays" type="number" min="0" step="1"></div>
     </div>
-  </div>
-
-  <div class="actions">
-    <button id="run">Generate strategy (rules)</button>
+    </div>
+  </details>
+  </section>
+  <div class="actions runbar">
+    <button id="run">Generate strategy</button>
+    <span class="hint" id="essentials"></span>
     <span class="hint" id="saveState">Saved</span>
+    <span class="toolbar" style="margin-left:auto"><button class="tiny secondary" id="expandAll">Expand all</button><button class="tiny secondary" id="collapseAll">Collapse all</button></span>
   </div>
 </div>
 
@@ -3278,6 +3337,7 @@ function renderForm() {
   OBJECTIONS.forEach((op) => { const l = document.createElement("label"); const i = document.createElement("input"); i.type = "checkbox"; i.checked = current.resolvedObjections.includes(op.key); i.addEventListener("change", () => { const s = new Set(current.resolvedObjections); i.checked ? s.add(op.key) : s.delete(op.key); current.resolvedObjections = [...s]; save(); }); l.append(i, document.createTextNode(op.label)); ro.appendChild(l); });
   Object.keys(LISTS).forEach(renderList);
   renderRuns();
+  if (typeof updateCounts === "function") updateCounts();
 }
 
 // ---------- Runs (history) ----------
@@ -3321,6 +3381,7 @@ function renderResult(r, meta = {}) {
   const rd = READINESS[sb.closeReadiness] || READINESS.advance;
   const h = [];
   h.push(`<h2>Strategy <span class="badge ${meta.stale ? "stale" : "valid"}">${meta.stale ? "stale" : "current"}</span> <span class="badge">rule-based · ${esc(ENGINE_VERSION)}</span></h2>`);
+  h.push('<div class="result-tools"><button class="tiny secondary" data-rs="open">Expand all</button><button class="tiny secondary" data-rs="close">Collapse all</button></div>');
   if (meta.stale) h.push(`<div class="note warn"><strong>Stale:</strong> ${esc(meta.reason || "inputs changed since this run")}. Regenerate before relying on the ask below.</div>`);
 
   h.push('<div class="primary">');
@@ -3351,20 +3412,16 @@ function renderResult(r, meta = {}) {
   if (d.callOpener && d.callOpener.trim()) h.push(`<div class="label">Call opener (first 20 seconds)</div>${wording(d.callOpener)}`);
 
   if (r.angles.length) {
-    h.push("<h3>Angles (ranked)</h3>");
+    h.push(`<h3>Angles <span class="n hint">${r.angles.length} ranked · best first</span></h3>`);
     r.angles.forEach((a) => h.push(`<details class="angle"${a.rank === 1 ? " open" : ""}><summary>${esc(a.rank)}. ${esc(a.title)}</summary><p class="hint">Why now: ${esc(a.rationale)}</p><div class="label">Say</div>${wording(a.suggestedWording, a.suggestedWordingTranslation)}<div class="label">Then ask</div>${wording(a.directAsk, a.directAskTranslation, "quote strong")}<p><strong>Proof needed:</strong> ${a.proofNeeded.map(esc).join("; ") || "—"}</p><p><strong>Test it:</strong> ${esc(a.questionToTest)}</p><p class="hint">Avoid when: ${esc(a.avoidWhen)}</p><p class="src">Method: ${a.methodSourceIds.map((m) => esc(METHOD_SOURCES[m]?.title ?? m)).join(" · ") || "—"}. Case evidence: ${a.evidenceIds.length ? `${a.evidenceIds.length} record(s)` : "none linked"}. Method sources support the approach; they never verify a project fact.</p></details>`));
     if (r.excludedAngles.length) h.push(`<p class="hint">Not repeated: ${r.excludedAngles.map((e) => esc(`${e.title} (${e.reason})`)).join("; ")}</p>`);
   }
-  if (r.hypotheses.length) { h.push("<h3>Hypotheses (not facts)</h3><ul>"); r.hypotheses.forEach((x) => h.push(`<li><strong>${esc(x.interpretation)}</strong> — could also be: ${x.alternatives.map(esc).join(", ") || "—"}. Test: ${esc(x.questionToTest)}</li>`)); h.push("</ul>"); }
-  if (r.objections.length) {
-    h.push("<h3>Objection responses (each ends in an ask)</h3>");
-    r.objections.forEach((o) => h.push(`<div style="margin-top:8px"><strong>${esc(o.objection)}</strong> <span class="badge">${esc(o.basis)}</span></div>${wording(o.response)}<p class="hint">Clarify: ${esc(o.clarifyingQuestion)}</p>${o.closeAsk ? `<div class="row"><div class="grow quote strong">Close: ${esc(o.closeAsk)}</div>${cp(o.closeAsk)}</div>` : ""}`));
-  }
-  h.push(`<h3>Fallback</h3><p>${esc(r.fallback.action)}</p><p class="hint">Prerequisite: ${esc(r.fallback.prerequisite)}</p>${wording(r.fallback.customerAsk)}`);
-  h.push("<h3>Response branches</h3><table><tr><th>If the customer…</th><th>Then</th><th>Say</th><th>Stop / re-check</th></tr>");
-  r.responseBranches.forEach((b) => h.push(`<tr><td>${esc(b.customerResponse)}</td><td>${esc(b.nextAction)}</td><td><div class="row"><span class="grow">${esc(b.suggestedWording)}</span>${cp(b.suggestedWording)}</div></td><td>${esc(b.stopOrRecheckCondition)}</td></tr>`));
-  h.push("</table>");
-  if (r.unknowns.length) { h.push("<h3>What to verify (only what changes this recommendation)</h3><ul>"); r.unknowns.forEach((u) => h.push(`<li>${esc(u.fact)} <span class="hint">→ task: ${esc(u.suggestedTask)}</span></li>`)); h.push("</ul>"); }
+  const sec = (title, n, open, inner) => `<details class="rsec"${open ? " open" : ""}><summary>${esc(title)}<span class="n">${esc(n)}</span></summary>${inner}</details>`;
+  if (r.hypotheses.length) h.push(sec("Hypotheses", `${r.hypotheses.length} · not facts, test them`, false, "<ul>" + r.hypotheses.map((x) => `<li><strong>${esc(x.interpretation)}</strong> — could also be: ${x.alternatives.map(esc).join(", ") || "—"}. Test: ${esc(x.questionToTest)}</li>`).join("") + "</ul>"));
+  if (r.objections.length) h.push(sec("Objection responses", `${r.objections.length} · each ends in an ask`, true, r.objections.map((o) => `<div style="margin-top:8px"><strong>${esc(o.objection)}</strong> <span class="badge">${esc(o.basis)}</span></div>${wording(o.response)}<p class="hint">Clarify: ${esc(o.clarifyingQuestion)}</p>${o.closeAsk ? `<div class="row"><div class="grow quote strong">Close: ${esc(o.closeAsk)}</div>${cp(o.closeAsk)}</div>` : ""}`).join("")));
+  h.push(sec("Fallback", "if the primary move stalls", true, `<p>${esc(r.fallback.action)}</p><p class="hint">Prerequisite: ${esc(r.fallback.prerequisite)}</p>${wording(r.fallback.customerAsk)}`));
+  h.push(sec("Response branches", `${r.responseBranches.length} · what to do after each reply`, false, "<table><tr><th>If the customer…</th><th>Then</th><th>Say</th><th>Stop / re-check</th></tr>" + r.responseBranches.map((b) => `<tr><td>${esc(b.customerResponse)}</td><td>${esc(b.nextAction)}</td><td><div class="row"><span class="grow">${esc(b.suggestedWording)}</span>${cp(b.suggestedWording)}</div></td><td>${esc(b.stopOrRecheckCondition)}</td></tr>`).join("") + "</table>"));
+  if (r.unknowns.length) h.push(sec("What to verify", `${r.unknowns.length} · only what changes this recommendation`, true, "<ul>" + r.unknowns.map((u) => `<li>${esc(u.fact)} <span class="hint">→ task: ${esc(u.suggestedTask)}</span></li>`).join("") + "</ul>"));
   h.push(`<p class="hint"><strong>Next review trigger:</strong> ${esc(r.nextReviewTrigger)}</p>`);
   r.notes.forEach((n) => h.push(`<p class="hint">${esc(n)}</p>`));
   h.push(`<div class="footer"><span class="badge ${meta.stale ? "stale" : "valid"}">${meta.stale ? "stale" : "current"}</span><span class="badge">rule-based · ${esc(ENGINE_VERSION)}</span><span class="badge">as of ${esc(new Date(sb.asOf).toLocaleString("en-GB"))}</span></div>`);
@@ -3406,7 +3463,11 @@ form.addEventListener("click", (e) => {
   if (b.dataset.add) { e.preventDefault(); current[b.dataset.add].push(LISTS[b.dataset.add].blank()); save(); renderList(b.dataset.add); }
   else if (b.dataset.remove) { e.preventDefault(); current[b.dataset.remove].splice(Number(b.dataset.idx), 1); save(); renderList(b.dataset.remove); }
 });
-$("#result").addEventListener("click", (e) => { const b = e.target.closest("button[data-copy]"); if (b) copyText(copyStore[Number(b.dataset.copy)] ?? "", b); });
+$("#result").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.copy) copyText(copyStore[Number(b.dataset.copy)] ?? "", b);
+  else if (b.dataset.rs) document.querySelectorAll("#result details").forEach((d) => { d.open = b.dataset.rs === "open"; });
+});
 
 $("#run").addEventListener("click", () => {
   const problems = inputProblems(current);
@@ -3421,6 +3482,8 @@ $("#run").addEventListener("click", () => {
   save();
   renderResult(result, { stale: false });
   renderRuns();
+  // On narrow screens the result sits below the form: bring it into view.
+  if (window.matchMedia("(max-width: 980px)").matches) $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 const resetResult = (msg) => { $("#result").innerHTML = `<h2>Strategy</h2><p class="empty">${esc(msg)}</p>`; };
 $("#newCase").onclick = () => { current = blankCase(); cases.unshift(current); save(); renderCaseSelect(); renderForm(); resetResult("New case. Fill it in and generate."); };
@@ -3428,10 +3491,44 @@ $("#deleteCase").onclick = () => { if (!confirm("Delete this case from this brow
 $("#caseSelect").onchange = (e) => { current = cases.find((c) => c.id === e.target.value) || cases[0]; renderForm(); resetResult("Case loaded. Generate or view a saved run."); };
 $("#demoCase").onclick = () => { const d = demoCase(); cases.unshift(d); current = d; save(); renderCaseSelect(); renderForm(); resetResult("Demo case loaded (synthetic data). Press “Generate strategy”."); };
 
+// ---------- Guidance layer (counts, key fields, expand/collapse). Adds no inputs and removes none. ----------
+const KEY_FIELDS = ["customer.name", "customer.language", "track", "pipelineStage", "readiness", "funding", "offer.price", "offer.currency", "budget.amount", "objection"];
+const isFilled = (el) => { const v = String(el.value ?? "").trim(); return v !== "" && v !== "unknown"; };
+function updateCounts() {
+  document.querySelectorAll("#form details.section").forEach((sec) => {
+    const fields = [...sec.querySelectorAll("input:not([type=checkbox]), select, textarea")].filter((el) => !el.closest("table.list"));
+    const filled = fields.filter(isFilled).length;
+    const checked = sec.querySelectorAll("input[type=checkbox]:checked").length;
+    const rows = [...sec.querySelectorAll("table.list tr")].filter((tr) => tr.querySelector("td")).length;
+    const parts = [];
+    if (fields.length) parts.push(`${filled} of ${fields.length} filled`);
+    if (checked) parts.push(`${checked} ticked`);
+    if (rows) parts.push(`${rows} added`);
+    const c = sec.querySelector(":scope > summary .count");
+    c.textContent = parts.length ? parts.join(" · ") : "nothing yet";
+    c.classList.toggle("some", filled + checked + rows > 0);
+  });
+  const keyFilled = KEY_FIELDS.filter((k) => { const el = document.querySelector(`#form [data-k="${k}"]`); return el && isFilled(el); }).length;
+  const e = $("#essentials");
+  e.textContent = keyFilled === KEY_FIELDS.length ? "All key fields filled" : `Key fields: ${keyFilled} of ${KEY_FIELDS.length}`;
+  e.title = "Key fields: " + KEY_FIELDS.join(", ") + ". The strategy runs with any input; key fields make it specific.";
+}
+form.addEventListener("input", updateCounts);
+form.addEventListener("change", updateCounts);
+form.addEventListener("click", (e) => { if (e.target.closest("button")) setTimeout(updateCounts, 0); });
+$("#expandAll").onclick = () => document.querySelectorAll("#form details.section").forEach((d) => { d.open = true; });
+$("#collapseAll").onclick = () => document.querySelectorAll("#form details.section").forEach((d) => { d.open = false; });
+const TOUR_KEY = "salesperson-test:tour-dismissed";
+try { if (localStorage.getItem(TOUR_KEY)) $("#tour").hidden = true; } catch {}
+$("#tourClose").onclick = () => { $("#tour").hidden = true; try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
+// A field that reaches a closed section (e.g. via the browser's find) opens it.
+document.querySelectorAll("#form details.section").forEach((d) => d.addEventListener("focusin", () => { d.open = true; }));
+
 populateStaticSelects();
 load();
 renderCaseSelect();
 renderForm();
+updateCounts();
 
 })();
 </script>

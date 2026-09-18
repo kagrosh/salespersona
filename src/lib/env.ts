@@ -7,6 +7,18 @@ export function supabaseEnv() {
   return { url, key };
 }
 
+/**
+ * Emails allowed to create an account through the app. Empty (unset) = open sign-up.
+ * When set, the Create-account tab is hidden and the sign-up action rejects every other address.
+ * Accounts added from the Supabase dashboard (Authentication → Users) are unaffected.
+ */
+export function signupAllowlist(): string[] {
+  return (process.env.SIGNUP_ALLOWED_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export function modelConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY;
 }

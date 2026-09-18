@@ -1,4 +1,5 @@
 import { Field } from "@/components/ui";
+import { signupAllowlist } from "@/lib/env";
 import { signIn, signUp } from "./actions";
 
 function configured(): boolean {
@@ -7,7 +8,8 @@ function configured(): boolean {
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const sp = await props.searchParams;
-  const mode = sp.mode === "signup" ? "signup" : "signin";
+  const inviteOnly = signupAllowlist().length > 0;
+  const mode = sp.mode === "signup" && !inviteOnly ? "signup" : "signin";
   const error = typeof sp.error === "string" ? sp.error : null;
   const info = typeof sp.info === "string" ? sp.info : null;
   const rawNext = typeof sp.next === "string" ? sp.next : "/";
@@ -29,9 +31,11 @@ export default async function LoginPage(props: PageProps<"/login">) {
           <a href="/login?mode=signin" className={`rounded-md px-3 py-1 ${mode === "signin" ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`}>
             Sign in
           </a>
-          <a href="/login?mode=signup" className={`rounded-md px-3 py-1 ${mode === "signup" ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`}>
-            Create account
-          </a>
+          {!inviteOnly && (
+            <a href="/login?mode=signup" className={`rounded-md px-3 py-1 ${mode === "signup" ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`}>
+              Create account
+            </a>
+          )}
         </div>
         <form action={mode === "signup" ? signUp : signIn} className="space-y-3">
           <input type="hidden" name="next" value={next} />

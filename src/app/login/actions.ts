@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { signupAllowlist } from "@/lib/env";
 
 const Credentials = z.object({
   email: z.string().email(),
@@ -27,6 +28,10 @@ export async function signIn(formData: FormData) {
 export async function signUp(formData: FormData) {
   const parsed = Credentials.safeParse({ email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) back({ error: parsed.error.issues[0].message, mode: "signup" });
+  const allowlist = signupAllowlist();
+  if (allowlist.length && !allowlist.includes(parsed.data.email.toLowerCase())) {
+    back({ error: "Sign-up is by invitation. Ask your administrator to add your account.", mode: "signin" });
+  }
   const displayName = String(formData.get("display_name") || "").trim();
   const workspaceName = String(formData.get("workspace_name") || "").trim();
   const supabase = await createClient();
