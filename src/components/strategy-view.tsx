@@ -36,7 +36,7 @@ function Wording({ text, translation, className = "quote" }: { text: string; tra
   return (
     <div>
       <div className="flex items-start gap-2">
-        <div className={`${className} flex-1`}>{text}</div>
+        <div className={`${className} min-w-0 flex-1`}>{text}</div>
         <CopyButton text={text} />
       </div>
       <Translation text={translation} />
@@ -67,8 +67,9 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
     <div className="space-y-4 text-sm">
       {stale && <div className="note-warn"><strong>Stale:</strong> {run.stale_reason ?? "inputs changed since this run"}. Regenerate before relying on the ask below.</div>}
 
-      {/* ---------------- the first block: readiness, blocker, THE ASK, actions ---------------- */}
-      <div className="rounded-lg border-2 border-emerald-700 p-4">
+      {/* The ask and draft remain expanded; supporting checks are one disclosure away. */}
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+      <div className="rounded-lg border-2 border-accent-700 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`badge ${readiness.cls}`} title={readiness.hint}>{readiness.label}</span>
           <span className="text-neutral-700"><strong>Blocker:</strong> {sb.activeBlocker}</span>
@@ -84,6 +85,8 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
 
         <p className="mt-3"><strong>Do:</strong> {move.action}</p>
         <p className="text-xs text-neutral-500">Purpose: {move.purpose} · Owner: {move.owner} · Due in {move.dueInDays ?? 1} day(s)</p>
+        <details className="mt-3 rounded-lg border border-neutral-200 p-3">
+          <summary className="cursor-pointer font-medium">Checks and contact context <span className="badge ml-1">{move.prerequisites.length + missing.length + gaps.length} checks</span></summary>
         {move.prerequisites.length > 0 && (
           <ul className="mt-1 list-disc pl-5 text-xs text-neutral-700">
             {move.prerequisites.map((p, i) => <li key={i}>Before this: {p}</li>)}
@@ -112,6 +115,8 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
           <span><strong>Cadence:</strong> touch {cadence.touch}{cadence.nextTouchInDays != null ? ` · next touch in ${cadence.nextTouchInDays} day(s)` : ""}{cadence.reason ? ` · reason: ${cadence.reason}` : ""}</span>
         </div>
 
+        </details>
+
         {!compact && (
           <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-neutral-200 pt-3">
             <form action={taskFromRun} className="flex flex-wrap items-end gap-2">
@@ -136,8 +141,30 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
         )}
       </div>
 
+      <section className="min-w-0 rounded-lg border border-accent-100 bg-accent-50/30 p-4">
+        <h3 className="mb-3 font-semibold">Customer-ready draft ({draft.language.toUpperCase()}) — review before sending; nothing is sent by the CRM</h3>
+        {hasDraft ? (
+          <>
+            <div className="flex flex-col items-start gap-2">
+              <textarea readOnly rows={9} className="textarea min-w-0 flex-1" aria-label="Customer-ready draft" defaultValue={draft.text} />
+              <CopyButton text={draft.text} label="Copy draft" />
+            </div>
+            <Translation text={draft.translation} />
+          </>
+        ) : (
+          <p className="text-xs text-neutral-500">No customer message for this state.</p>
+        )}
+        {draft.callOpener && draft.callOpener.trim() && (
+          <div className="mt-2">
+            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Call opener (first 20 seconds)</div>
+            <Wording text={draft.callOpener} />
+          </div>
+        )}
+      </section>
+      </div>
+
       {!compact && (
-        <details className="rounded-md border border-neutral-200 p-3" open={sb.closeReadiness !== "stopped"}>
+        <details className="rounded-md border border-neutral-200 p-3">
           <summary className="cursor-pointer font-medium">Record attempt (what you said, what they answered)</summary>
           <form action={recordAttempt} className="mt-2 grid gap-2 sm:grid-cols-4">
             <input type="hidden" name="opportunity_id" value={opportunityId} /><input type="hidden" name="run_id" value={run.id} />
@@ -157,26 +184,7 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
       {sb.changesSincePreviousRun.length > 0 && <p className="text-xs text-neutral-500">Since last run: {sb.changesSincePreviousRun.join("; ")}</p>}
       {sb.staleInputs.length > 0 && <p className="text-xs text-amber-800">Refresh before relying on: {sb.staleInputs.join(", ")}</p>}
 
-      <section>
-        <h3 className="font-semibold">Customer-ready draft ({draft.language.toUpperCase()}) — review before sending; nothing is sent by the CRM</h3>
-        {hasDraft ? (
-          <>
-            <div className="flex items-start gap-2">
-              <textarea readOnly rows={6} className="textarea flex-1" defaultValue={draft.text} />
-              <CopyButton text={draft.text} label="Copy draft" />
-            </div>
-            <Translation text={draft.translation} />
-          </>
-        ) : (
-          <p className="text-xs text-neutral-500">No customer message for this state.</p>
-        )}
-        {draft.callOpener && draft.callOpener.trim() && (
-          <div className="mt-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Call opener (first 20 seconds)</div>
-            <Wording text={draft.callOpener} />
-          </div>
-        )}
-      </section>
+
 
       {r.angles.length > 0 && (
         <section>
@@ -200,19 +208,22 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
       )}
 
       {r.hypotheses.length > 0 && (
-        <section>
-          <h3 className="font-semibold">Hypotheses (not facts)</h3>
+        <details className="result-disclosure">
+          <summary>Hypotheses (not facts) <span className="badge ml-2">{r.hypotheses.length}</span></summary>
+          <div className="result-body">
           <ul className="list-disc pl-5">
             {r.hypotheses.map((h, i) => (
               <li key={i}><strong>{h.interpretation}</strong> — could also be: {h.alternatives.join(", ") || "—"}. Test: {h.questionToTest}</li>
             ))}
           </ul>
-        </section>
+        </div>
+        </details>
       )}
 
       {r.objections.length > 0 && (
-        <section>
-          <h3 className="font-semibold">Objection responses (each ends in an ask)</h3>
+        <details className="result-disclosure">
+          <summary>Objection responses (each ends in an ask) <span className="badge ml-2">{r.objections.length}</span></summary>
+          <div className="result-body">
           {r.objections.map((o, i) => (
             <div key={i} className="my-2">
               <div><strong>{o.objection}</strong> <span className="badge">{o.basis}</span></div>
@@ -226,7 +237,8 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
               )}
             </div>
           ))}
-        </section>
+        </div>
+        </details>
       )}
 
       <section>
@@ -236,34 +248,38 @@ export function StrategyView({ run, opportunityId, compact = false }: { run: Str
         <Wording text={r.fallback.customerAsk} />
       </section>
 
-      <section>
-        <h3 className="font-semibold">Response branches</h3>
+      <details className="result-disclosure">
+          <summary>Response branches <span className="badge ml-2">{r.responseBranches.length}</span></summary>
+          <div className="result-body">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="responsive-table w-full">
             <thead className="text-left text-xs text-neutral-500"><tr><th className="py-1">If the customer…</th><th>Then</th><th>Say</th><th>Stop / re-check</th></tr></thead>
             <tbody className="divide-y divide-neutral-100 align-top">
               {r.responseBranches.map((b, i) => (
                 <tr key={i}>
-                  <td className="py-1 pr-2">{b.customerResponse}</td>
-                  <td className="pr-2">{b.nextAction}</td>
-                  <td className="pr-2">
+                  <td data-label="If the customer…" className="py-1 pr-2">{b.customerResponse}</td>
+                  <td data-label="Then" className="pr-2">{b.nextAction}</td>
+                  <td data-label="Say" className="pr-2">
                     <div className="flex items-start gap-1"><span className="flex-1">{b.suggestedWording}</span>{b.suggestedWording && <CopyButton text={b.suggestedWording} label="Copy" />}</div>
                   </td>
-                  <td>{b.stopOrRecheckCondition}</td>
+                  <td data-label="Stop / re-check">{b.stopOrRecheckCondition}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </div>
+        </details>
 
       {r.unknowns.length > 0 && (
-        <section>
-          <h3 className="font-semibold">What to verify (only what changes this recommendation)</h3>
+        <details className="result-disclosure">
+          <summary>What to verify (only what changes this recommendation) <span className="badge ml-2">{r.unknowns.length}</span></summary>
+          <div className="result-body">
           <ul className="list-disc pl-5">
             {r.unknowns.map((u, i) => <li key={i}>{u.fact} <span className="text-xs text-neutral-500">→ {u.suggestedTask}</span></li>)}
           </ul>
-        </section>
+        </div>
+        </details>
       )}
 
       <p className="text-xs text-neutral-500"><strong>Next review trigger:</strong> {r.nextReviewTrigger}</p>

@@ -1,3 +1,4 @@
+import { QuickStart } from "@/components/quick-start";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addActivity, addBudget, addOption, changeStage, saveAnswers, setOptionStatus, updateNegotiation, updateOpportunityContext, updateQualification } from "@/app/actions/opportunities";
@@ -66,7 +67,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
   const generateButtons = o.stage === "won" ? (
     <p className="text-xs text-neutral-500">Deal is won: no sales move applies and no strategy is generated. Hand over to after-sales / completion per your business process.</p>
   ) : (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <form action={generateRules}><input type="hidden" name="opportunity_id" value={o.id} /><button className="btn-secondary btn-sm" type="submit">Generate (rules)</button></form>
       <form action={generateWithModel}><input type="hidden" name="opportunity_id" value={o.id} /><button className="btn btn-sm" type="submit" disabled={!aiReady} title={aiReady ? "Full-case analysis including written notes" : "Set ANTHROPIC_API_KEY on the server to enable"}>Analyze full case with AI</button></form>
     </div>
@@ -115,7 +116,11 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
       )}
 
       {/* ---------------- Strategy: full width, first ---------------- */}
-      <Card id="strategy" title="Strategy" actions={generateButtons} className="mb-4">
+      <div className="strategy-toolbar" role="region" aria-label="Generate strategy">
+        <p className="text-xs text-neutral-600">Save changes before generating. Nothing is sent.</p>
+        {generateButtons}
+      </div>
+      <Card id="strategy" title="Your next move" className="mb-6">
         {!aiReady && <p className="mb-2 text-xs text-neutral-500">AI analysis is unavailable (no server credentials). Rule-based strategy works without it and is labeled as such.</p>}
         {latestValid ? (
           <StrategyView run={latestValid} opportunityId={o.id} />
@@ -127,14 +132,15 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
         )}
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-5">
-        {/* ---------------- left: case inputs (collapsed) ---------------- */}
-        <div className="space-y-4 xl:col-span-3">
-          <Collapsible id="stage" title="Pipeline stage" open={advanced || o.stage === "paused" || o.stage === "lost"} summaryExtra={<>{PIPELINE_LABELS[o.stage as keyof typeof PIPELINE_LABELS] ?? o.stage}</>}>
+      <QuickStart />
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <section aria-labelledby="group-1" className="min-w-0 space-y-3">
+          <div className="group-heading"><span className="group-number">1</span><div><h2 id="group-1" className="font-semibold">The customer and the deal</h2><p className="mt-1 text-sm text-neutral-600">Start with the current state and the facts you know.</p></div></div>
+          <Collapsible id="stage" subtitle="Where the deal stands, including agreed pauses or refusals." countFields title="Pipeline stage" open={advanced || o.stage === "paused" || o.stage === "lost"} summaryExtra={<>{PIPELINE_LABELS[o.stage as keyof typeof PIPELINE_LABELS] ?? o.stage}</>}>
             <form action={changeStage} className="grid gap-2 sm:grid-cols-3">
               <input type="hidden" name="id" value={o.id} />
-              <Field label="Stage"><Select name="stage" defaultValue={o.stage} options={STAGE_OPTIONS} /></Field>
-              <Field label="Reason (required for lost/paused)"><input name="reason" className="input" defaultValue={o.stage_reason ?? ""} /></Field>
+              <Field keyField label="Stage"><Select name="stage" defaultValue={o.stage} options={STAGE_OPTIONS} /></Field>
+              <Field label="Reason" hint="Required for lost or paused."><input name="reason" className="input" defaultValue={o.stage_reason ?? ""} /></Field>
               <Field label="Paused until (required for paused)" hint="The customer's own agreed re-contact date; a task is created for it."><input name="paused_until" type="date" className="input" defaultValue={o.paused_until ?? ""} /></Field>
               <details className="sm:col-span-3 rounded-md border border-neutral-200 p-3" open={o.stage === "lost"}>
                 <summary className="cursor-pointer text-sm font-medium">Lost details (required when moving to lost)</summary>
@@ -150,14 +156,14 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </form>
           </Collapsible>
 
-          <Collapsible id="context" title="Deal context (current state)" summaryExtra={<>{o.readiness} · {o.current_objection ? labelOf(OBJECTIONS, o.current_objection) : "no objection"} · funding {o.funding_status}</>}>
+          <Collapsible id="context" subtitle="Readiness, funding and the objection stated right now." countFields title="Deal context (current state)" summaryExtra={<>{o.readiness} · {o.current_objection ? labelOf(OBJECTIONS, o.current_objection) : "no objection"} · funding {o.funding_status}</>}>
             <form action={updateOpportunityContext} className="grid gap-3 sm:grid-cols-2">
               <input type="hidden" name="id" value={o.id} />
               <Field label="Title" className="sm:col-span-2"><input name="title" className="input" defaultValue={o.title} /></Field>
-              <Field label="Track"><Select name="track" defaultValue={o.track} options={[{ key: "home", label: "Apartment / home" }, { key: "land", label: "Plot / land" }]} /></Field>
-              <Field label="Customer readiness (stated)"><Select name="readiness" defaultValue={o.readiness} options={READINESS_OPTIONS} /></Field>
-              <Field label="Current explicit objection"><Select name="current_objection" defaultValue={o.current_objection ?? ""} blank="None stated" options={OBJECTIONS} /></Field>
-              <Field label="Funding status"><Select name="funding_status" defaultValue={o.funding_status} options={FUNDING_OPTIONS} /></Field>
+              <Field keyField label="Track"><Select name="track" defaultValue={o.track} options={[{ key: "home", label: "Apartment / home" }, { key: "land", label: "Plot / land" }]} /></Field>
+              <Field keyField label="Customer readiness (stated)"><Select name="readiness" defaultValue={o.readiness} options={READINESS_OPTIONS} /></Field>
+              <Field keyField label="Current explicit objection"><Select name="current_objection" defaultValue={o.current_objection ?? ""} blank="None stated" options={OBJECTIONS} /></Field>
+              <Field keyField label="Funding status"><Select name="funding_status" defaultValue={o.funding_status} options={FUNDING_OPTIONS} /></Field>
               <Field label="Decision participants"><input name="decision_participants" className="input" defaultValue={o.decision_participants ?? ""} placeholder="Spouse; family adviser" /></Field>
               <Field label="Target timing (customer's words)"><input name="target_timing" className="input" defaultValue={o.target_timing ?? ""} /></Field>
               <Field label="Your desired immediate outcome" className="sm:col-span-2"><input name="desired_outcome" className="input" defaultValue={o.desired_outcome ?? ""} /></Field>
@@ -171,41 +177,26 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </form>
           </Collapsible>
 
-          <Collapsible id="qualification" title="Qualification (the facts a closer needs)" summaryExtra={<>{[o.target_decision_date ? `decide by ${o.target_decision_date}` : null, o.why_now ? "why-now recorded" : "why-now missing", o.must_haves ? "must-haves recorded" : "must-haves missing"].filter(Boolean).join(" · ")}</>}>
+          <Collapsible id="qualification" subtitle="Timing, must-haves and who needs to decide." countFields title="Qualification (the facts a closer needs)" summaryExtra={<>{[o.target_decision_date ? `decide by ${o.target_decision_date}` : null, o.why_now ? "why-now recorded" : "why-now missing", o.must_haves ? "must-haves recorded" : "must-haves missing"].filter(Boolean).join(" · ")}</>}>
             <form action={updateQualification} className="grid gap-3 sm:grid-cols-2">
               <input type="hidden" name="id" value={o.id} />
               <Field label="Target decision date (customer's)"><input name="target_decision_date" type="date" className="input" defaultValue={o.target_decision_date ?? ""} /></Field>
               <Field label="Why now (customer's stated reason)"><input name="why_now" className="input" defaultValue={o.why_now ?? ""} /></Field>
               <Field label="Must-haves (deal-breakers)"><textarea name="must_haves" className="textarea" defaultValue={o.must_haves ?? ""} /></Field>
               <Field label="Nice-to-haves"><textarea name="nice_to_haves" className="textarea" defaultValue={o.nice_to_haves ?? ""} /></Field>
-              <Field label="Competing options (incl. 'do nothing' / other asset class)"><input name="competing_options" className="input" defaultValue={o.competing_options ?? ""} /></Field>
+              <Field label="Competing options" hint="Include ‘do nothing’ or another asset class."><input name="competing_options" className="input" defaultValue={o.competing_options ?? ""} /></Field>
               <Field label="Customer's own 'I'll proceed if …'"><input name="proceed_condition" className="input" defaultValue={o.proceed_condition ?? ""} /></Field>
               <Field label="Co-decider status"><Select name="co_decider_status" defaultValue={o.co_decider_status ?? "unknown"} options={CO_DECIDER_STATUS} /></Field>
               <Field label="Will visit before deciding?"><Select name="will_visit_before_deciding" defaultValue={o.will_visit_before_deciding ?? "unknown"} options={YNU} /></Field>
-              <Field label="Funding source (savings, sale of another property, loan…)"><input name="funding_source" className="input" defaultValue={o.funding_source ?? ""} /></Field>
-              <Field label="Funding timing (when funds are available)"><input name="funding_timing" className="input" defaultValue={o.funding_timing ?? ""} /></Field>
+              <Field label="Funding source" hint="Savings, sale of another property, loan…"><input name="funding_source" className="input" defaultValue={o.funding_source ?? ""} /></Field>
+              <Field label="Funding timing" hint="When funds are available."><input name="funding_timing" className="input" defaultValue={o.funding_timing ?? ""} /></Field>
               <div className="sm:col-span-2"><button className="btn" type="submit">Save qualification</button> <span className="text-xs text-neutral-500">Stated budget is not available funding; record what the customer said, not what you assume.</span></div>
             </form>
           </Collapsible>
-
-          <Collapsible id="negotiation" title="Negotiation position" summaryExtra={<>{o.negotiation_room === "no" ? "price final" : o.authorized_room_minor != null ? `authorized room ${formatMinor(o.authorized_room_minor, offerCurrency)}` : "authority not confirmed"}{o.counter_offer_minor != null ? ` · counter ${formatMinor(o.counter_offer_minor, o.counter_offer_currency)}` : ""}</>}>
-            <div className="mb-3 rounded-md bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
-              Offer: {snapshot.offer?.priceMinor != null ? formatMinor(snapshot.offer.priceMinor, snapshot.offer.currency) : "no preferred option / price"} · costs {snapshot.offer?.costsMinor != null ? formatMinor(snapshot.offer.costsMinor, snapshot.offer.currency) : "unknown"} · budget: {budgetText}
-            </div>
-            <form action={updateNegotiation} className="grid gap-3 sm:grid-cols-3">
-              <input type="hidden" name="id" value={o.id} />
-              <Field label="Negotiation room (per seller)"><Select name="negotiation_room" defaultValue={o.negotiation_room} options={ROOM_OPTIONS} /></Field>
-              <Field label="Customer's counter-offer"><input name="counter_offer" className="input" inputMode="decimal" defaultValue={minorToDecimalString(o.counter_offer_minor)} /></Field>
-              <Field label="Counter-offer currency"><Select name="counter_offer_currency" defaultValue={o.counter_offer_currency ?? offerCurrency} options={CURRENCIES} /></Field>
-              <Field label={`Authorized price room (${offerCurrency}, reduction from price)`} hint="Only what the seller authorized in writing. Blank = not confirmed."><input name="authorized_room" className="input" inputMode="decimal" defaultValue={minorToDecimalString(o.authorized_room_minor)} /></Field>
-              <label className="flex items-end gap-2 pb-2 text-sm sm:col-span-2"><input type="checkbox" name="authorized_in_writing" value="1" defaultChecked={o.authorized_room_minor != null} /> I hold the seller&apos;s written authorization for this room (required to save an amount)</label>
-              <Field label="Authorized non-price terms (payment plan, fee sharing, furniture, unit/floor swap — only what is listed by the seller)" className="sm:col-span-3"><textarea name="authorized_terms" className="textarea" defaultValue={o.authorized_terms ?? ""} /></Field>
-              <Field label="Concessions already given to this customer (never offered twice)" className="sm:col-span-3"><textarea name="concessions_given" className="textarea" defaultValue={o.concessions_given ?? ""} /></Field>
-              <div className="sm:col-span-3"><button className="btn" type="submit">Save negotiation position</button> <span className="text-xs text-neutral-500">Any concession is traded for a dated commitment, never given unilaterally.</span></div>
-            </form>
-          </Collapsible>
-
-          <Collapsible id="options" title={`Candidate properties (${c.options.length})`} summaryExtra={<>{snapshot.offer ? `preferred: ${snapshot.offer.reference}` : "no preferred option"}</>}>
+        </section>
+        <section aria-labelledby="group-2" className="min-w-0 space-y-3">
+          <div className="group-heading"><span className="group-number">2</span><div><h2 id="group-2" className="font-semibold">The offer and the budget</h2><p className="mt-1 text-sm text-neutral-600">Connect real inventory, costs and authorized terms.</p></div></div>
+          <Collapsible id="options" subtitle="The units or plots being considered, and when they were checked." countFields countLabel="Option forms" title={`Candidate properties (${c.options.length})`} summaryExtra={<>{snapshot.offer ? `preferred: ${snapshot.offer.reference}` : "no preferred option"}</>}>
             {c.options.length === 0 ? <Empty>No unit or plot attached yet.</Empty> : (
               <ul className="divide-y divide-neutral-100 text-sm">
                 {c.options.map((op) => {
@@ -243,7 +234,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                 )}
               </Field>
               <Field label="Quoted price (if different)"><input name="quoted_price" className="input" inputMode="decimal" /></Field>
-              <Field label="Currency"><Select name="quoted_currency" blank="Use unit's" options={CURRENCIES} /></Field>
+              <Field keyField label="Currency"><Select name="quoted_currency" blank="Use unit's" options={CURRENCIES} /></Field>
               <Field label="Quoted costs"><input name="quoted_costs" className="input" inputMode="decimal" /></Field>
               <Field label="Quote valid until"><input name="quote_valid_until" type="date" className="input" /></Field>
               <Field label="Terms source (required with a date)" hint="Written offer, price list… A deadline without a source is never used."><input name="terms_source" className="input" placeholder="Written offer of 12 Sep" /></Field>
@@ -252,8 +243,8 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </form>
           </Collapsible>
 
-          <Collapsible id="budget" title="Budget (this opportunity)" summaryExtra={<>{snapshot.budget ? `${formatMinor(snapshot.budget.amountMinor, snapshot.budget.currency)} · ${snapshot.budget.scope.replace(/_/g, " ")}` : "not recorded"}</>}>
-            <div className={`mb-2 rounded-md px-3 py-2 text-sm ${budget.status === "gap" ? "bg-amber-50 text-amber-900" : budget.status === "fits" ? "bg-emerald-50 text-emerald-900" : "bg-neutral-100 text-neutral-700"}`}>{budgetText}</div>
+          <Collapsible id="budget" subtitle="What the customer says they can spend on this opportunity." countFields countLabel="New budget" title="Budget (this opportunity)" summaryExtra={<>{snapshot.budget ? `${formatMinor(snapshot.budget.amountMinor, snapshot.budget.currency)} · ${snapshot.budget.scope.replace(/_/g, " ")}` : "not recorded"}</>}>
+            <div className={`mb-2 rounded-md px-3 py-2 text-sm ${budget.status === "gap" ? "bg-amber-50 text-amber-900" : budget.status === "fits" ? "bg-accent-50 text-accent-900" : "bg-neutral-100 text-neutral-700"}`}>{budgetText}</div>
             {c.budgets.length > 0 && (
               <ul className="mb-3 divide-y divide-neutral-100 text-sm">
                 {c.budgets.slice(0, 3).map((b, i) => (
@@ -269,7 +260,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             )}
             <form action={addBudget} className="grid gap-2 sm:grid-cols-3">
               <input type="hidden" name="opportunity_id" value={o.id} />
-              <Field label="Amount"><input name="amount" className="input" inputMode="decimal" required /></Field>
+              <Field keyField label="Amount"><input name="amount" className="input" inputMode="decimal" required /></Field>
               <Field label="Upper amount (optional)"><input name="amount_max" className="input" inputMode="decimal" /></Field>
               <Field label="Currency"><Select name="currency" defaultValue={offerCurrency} options={CURRENCIES} /></Field>
               <Field label="Scope"><Select name="scope" defaultValue="purchase_total" options={[{ key: "purchase_total", label: "Total purchase incl. costs" }, { key: "price_only", label: "Price only (costs excluded)" }, { key: "deposit", label: "Deposit / down payment" }, { key: "borrowing_capacity", label: "Borrowing capacity" }, { key: "development_total", label: "Total development funding" }, { key: "ongoing_affordability", label: "Ongoing affordability" }, { key: "unknown", label: "Scope unclear" }]} /></Field>
@@ -289,7 +280,26 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </form>
           </Collapsible>
 
-          <Collapsible id="assessment" title="Structured assessment (customer's stated answers)" summaryExtra={<>{Object.values(answers).filter(Boolean).length}/{questionsFor(o.track).length} answered</>}>
+          <Collapsible id="negotiation" subtitle="Internal only: written seller authority and the customer’s counter-offer." countFields title="Negotiation position" summaryExtra={<>{o.negotiation_room === "no" ? "price final" : o.authorized_room_minor != null ? `authorized room ${formatMinor(o.authorized_room_minor, offerCurrency)}` : "authority not confirmed"}{o.counter_offer_minor != null ? ` · counter ${formatMinor(o.counter_offer_minor, o.counter_offer_currency)}` : ""}</>}>
+            <div className="mb-3 rounded-md bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
+              Offer: {snapshot.offer?.priceMinor != null ? formatMinor(snapshot.offer.priceMinor, snapshot.offer.currency) : "no preferred option / price"} · costs {snapshot.offer?.costsMinor != null ? formatMinor(snapshot.offer.costsMinor, snapshot.offer.currency) : "unknown"} · budget: {budgetText}
+            </div>
+            <form action={updateNegotiation} className="grid gap-3 sm:grid-cols-3">
+              <input type="hidden" name="id" value={o.id} />
+              <Field label="Negotiation room (per seller)"><Select name="negotiation_room" defaultValue={o.negotiation_room} options={ROOM_OPTIONS} /></Field>
+              <Field label="Customer's counter-offer"><input name="counter_offer" className="input" inputMode="decimal" defaultValue={minorToDecimalString(o.counter_offer_minor)} /></Field>
+              <Field label="Counter-offer currency"><Select name="counter_offer_currency" defaultValue={o.counter_offer_currency ?? offerCurrency} options={CURRENCIES} /></Field>
+              <Field label={`Authorized price room (${offerCurrency}, reduction from price)`} hint="Only what the seller authorized in writing. Blank = not confirmed."><input name="authorized_room" className="input" inputMode="decimal" defaultValue={minorToDecimalString(o.authorized_room_minor)} /></Field>
+              <label className="flex items-end gap-2 pb-2 text-sm sm:col-span-2"><input type="checkbox" name="authorized_in_writing" value="1" defaultChecked={o.authorized_room_minor != null} /> I hold the seller&apos;s written authorization for this room (required to save an amount)</label>
+              <Field label="Authorized non-price terms (payment plan, fee sharing, furniture, unit/floor swap — only what is listed by the seller)" className="sm:col-span-3"><textarea name="authorized_terms" className="textarea" defaultValue={o.authorized_terms ?? ""} /></Field>
+              <Field label="Concessions already given to this customer (never offered twice)" className="sm:col-span-3"><textarea name="concessions_given" className="textarea" defaultValue={o.concessions_given ?? ""} /></Field>
+              <div className="sm:col-span-3"><button className="btn" type="submit">Save negotiation position</button> <span className="text-xs text-neutral-500">Any concession is traded for a dated commitment, never given unilaterally.</span></div>
+            </form>
+          </Collapsible>
+        </section>
+        <section aria-labelledby="group-3" className="min-w-0 space-y-3">
+          <div className="group-heading"><span className="group-number">3</span><div><h2 id="group-3" className="font-semibold">What they said and did</h2><p className="mt-1 text-sm text-neutral-600">Record evidence before interpreting it.</p></div></div>
+          <Collapsible id="assessment" subtitle="The customer’s own answers to the standard questions." countFields title="Structured assessment (customer's stated answers)" summaryExtra={<>{Object.values(answers).filter(Boolean).length}/{questionsFor(o.track).length} answered</>}>
             <form action={saveAnswers} className="grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="opportunity_id" value={o.id} /><input type="hidden" name="customer_id" value={o.customer_id} />
               {questionsFor(o.track).map((q, i) => (
@@ -299,7 +309,7 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
             </form>
           </Collapsible>
 
-          <Collapsible id="activity" title={`Activity and evidence (${c.activities.length})`} summaryExtra={<>last: {c.activities[0] ? <>{c.activities[0].type} · <DateText value={c.activities[0].occurred_at} /></> : "none"}</>}>
+          <Collapsible id="activity" subtitle="Their words, observed behavior and your interpretation stay separate." countFields countLabel="New activity" title={`Activity and evidence (${c.activities.length})`} summaryExtra={<>last: {c.activities[0] ? <>{c.activities[0].type} · <DateText value={c.activities[0].occurred_at} /></> : "none"}</>}>
             <form action={addActivity} className="mb-4 grid gap-2 sm:grid-cols-2">
               <input type="hidden" name="opportunity_id" value={o.id} /><input type="hidden" name="customer_id" value={o.customer_id} />
               <Field label="Type"><Select name="type" defaultValue="call" options={ACTIVITY_TYPES} /></Field>
@@ -330,11 +340,10 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               </ul>
             )}
           </Collapsible>
-        </div>
-
-        {/* ---------------- right: history, attempts, tasks ---------------- */}
-        <div className="space-y-4 xl:col-span-2">
-          <Card id="tasks" title={`Follow-up tasks (${openTasks.length} open)`}>
+        </section>
+        <section aria-labelledby="group-4" className="min-w-0 space-y-3">
+          <div className="group-heading"><span className="group-number">4</span><div><h2 id="group-4" className="font-semibold">Follow through</h2><p className="mt-1 text-sm text-neutral-600">Save the next step and learn from previous attempts.</p></div></div>
+          <Collapsible id="tasks" title="Follow-up tasks" subtitle="Keep a concrete next step on this deal." open summaryExtra={`${openTasks.length} open · ${taskRows.length} total`}>
             {openTasks.length === 0 && !isTerminal && o.stage !== "paused" && <div className="note-bad mb-2">No next step on this deal. Save the ask as a task or add one below.</div>}
             {taskRows.length === 0 ? <Empty>No tasks yet.</Empty> : (
               <ul className="mb-3 divide-y divide-neutral-100 text-sm">
@@ -373,9 +382,9 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
               <input type="hidden" name="due_days" value="1" />
               <div className="flex items-end"><button className="btn-secondary btn-sm" type="submit">Add task</button></div>
             </form>
-          </Card>
+          </Collapsible>
 
-          <Card id="attempts" title={`Angles tried (${c.attempts.length})`}>
+          <Collapsible id="attempts" title="Angles tried" subtitle="What was used and how the customer responded." summaryExtra={`${c.attempts.length} attempts`}>
             {c.attempts.length > 0 && <p className="mb-2 text-xs text-neutral-500">{Object.entries(attemptCounts).map(([k, v]) => `${k} ×${v}`).join(" · ")}</p>}
             {c.attempts.length === 0 ? <Empty>None recorded. Record what you actually said and how the customer responded (Strategy → Record attempt); failed angles are not repeated automatically.</Empty> : (
               <div className="overflow-x-auto">
@@ -394,10 +403,10 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                 </table>
               </div>
             )}
-          </Card>
+          </Collapsible>
 
           {c.runs.length > 1 && (
-            <Card title="Strategy history">
+            <Collapsible title="Strategy history" subtitle="Earlier advice, preserved with its original inputs." summaryExtra={`${c.runs.length} runs`}>
               <ul className="divide-y divide-neutral-100 text-sm">
                 {c.runs.map((r) => (
                   <li key={r.id} className="flex flex-wrap items-center gap-2 py-1">
@@ -409,9 +418,9 @@ export default async function OpportunityPage(props: PageProps<"/opportunities/[
                   </li>
                 ))}
               </ul>
-            </Card>
+            </Collapsible>
           )}
-        </div>
+        </section>
       </div>
     </>
   );

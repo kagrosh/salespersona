@@ -5,7 +5,7 @@ export function Card({ title, children, className = "", actions, id }: { title?:
   return (
     <section id={id} className={`card scroll-mt-4 ${className}`}>
       {(title || actions) && (
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           {title && <h2 className="card-title !mb-0">{title}</h2>}
           {actions}
         </div>
@@ -15,23 +15,12 @@ export function Card({ title, children, className = "", actions, id }: { title?:
   );
 }
 
-/** A card whose body is collapsed by default; the browser opens it when a fragment link targets `id`. */
-export function Collapsible({ title, children, open = false, id, summaryExtra, className = "" }: { title: string; children: ReactNode; open?: boolean; id?: string; summaryExtra?: ReactNode; className?: string }) {
-  return (
-    <details id={id} className={`card scroll-mt-4 ${className}`} open={open}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-        <span className="card-title !mb-0">{title}</span>
-        {summaryExtra && <span className="text-xs text-neutral-500">{summaryExtra}</span>}
-      </summary>
-      <div className="mt-3">{children}</div>
-    </details>
-  );
-}
+export { Collapsible } from "@/components/collapsible";
 
-export function Field({ label, children, hint, className = "" }: { label: string; children: ReactNode; hint?: string; className?: string }) {
+export function Field({ label, children, hint, className = "", keyField = false }: { label: string; children: ReactNode; hint?: string; className?: string; keyField?: boolean }) {
   return (
     <label className={`block ${className}`}>
-      <span className="label">{label}</span>
+      <span className="label">{label}{keyField && <span className="key-tag ml-2">key</span>}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-neutral-500">{hint}</span>}
     </label>
@@ -53,7 +42,7 @@ export function Select({ name, options, defaultValue, blank, required, id }: { n
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="text-sm italic text-neutral-500">{children}</p>;
+  return <p className="rounded-lg bg-neutral-50 px-4 py-5 text-sm leading-relaxed text-neutral-600">{children}</p>;
 }
 
 export function ErrorNote({ message }: { message?: string | null }) {
@@ -63,12 +52,12 @@ export function ErrorNote({ message }: { message?: string | null }) {
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-semibold">{title}</h1>
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {subtitle && <div className="mt-1 text-sm text-neutral-500">{subtitle}</div>}
       </div>
-      {actions && <div className="flex gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }
@@ -93,7 +82,7 @@ export function DaysAgo({ days, warnAfter = 5, never = "never" }: { days: number
 
 export function RowLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="block rounded-md px-3 py-2 hover:bg-neutral-50">
+    <Link href={href} className="block rounded-md px-3 py-3 hover:bg-neutral-50">
       {children}
     </Link>
   );

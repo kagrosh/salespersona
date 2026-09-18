@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --color-accent-50: #f7f0fb;
+  --color-accent-100: #efdef7;
+  --color-accent-200: #dfbeee;
+  --color-accent-300: #c797de;
+  --color-accent-400: #b373ce;
+  --color-accent-500: #9452b9;
+  --color-accent-600: #823dab;
+  --color-accent-700: #722f99;
+  --color-accent-800: #602581;
+  --color-accent-900: #4e2366;
+  --color-accent-950: #32113e;
+  --color-canvas: #f7f6f8;
+  --color-surface: #ffffff;
+  --color-line: #e5e0e8;
+  --radius-panel: 1rem;
+}
+
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -8,28 +26,28 @@ body {
 .input,
 .select,
 .textarea {
-  @apply w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-xs outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:bg-neutral-100;
+  @apply w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 min-h-11 min-w-0 outline-none focus:border-accent-600 focus:ring-2 focus:ring-accent-100 disabled:bg-neutral-100;
 }
 .textarea {
   @apply min-h-20 resize-y;
 }
 .label {
-  @apply mb-1 block text-xs font-medium text-neutral-600;
+  @apply mb-1 block text-sm font-medium text-neutral-700;
 }
 .btn {
-  @apply inline-flex items-center gap-1 rounded-md border border-emerald-700 bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50;
+  @apply inline-flex items-center gap-1 min-h-11 justify-center rounded-lg border border-accent-700 bg-accent-700 px-3 py-2 text-sm font-medium text-white hover:bg-accent-800 disabled:opacity-50;
 }
 .btn-secondary {
-  @apply inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:opacity-50;
+  @apply inline-flex items-center gap-1 min-h-11 justify-center rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:opacity-50;
 }
 .btn-sm {
-  @apply px-2 py-1 text-xs;
+  @apply min-h-9 px-3 py-2 text-xs;
 }
 .card {
-  @apply rounded-lg border border-neutral-200 bg-white p-5;
+  @apply min-w-0 rounded-panel border border-line bg-surface p-4 sm:p-5;
 }
 .card-title {
-  @apply mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500;
+  @apply mb-3 text-base font-semibold tracking-tight text-neutral-800;
 }
 .badge {
   @apply inline-block rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-xs text-neutral-600;
@@ -38,13 +56,13 @@ body {
   @apply border-amber-300 bg-amber-50 text-amber-800;
 }
 .badge-good {
-  @apply border-emerald-300 bg-emerald-50 text-emerald-800;
+  @apply border-accent-300 bg-accent-50 text-accent-800;
 }
 .badge-bad {
   @apply border-red-300 bg-red-50 text-red-800;
 }
 .quote {
-  @apply my-2 whitespace-pre-wrap rounded-r-md border-l-4 border-emerald-600 bg-emerald-50/60 px-3 py-2 text-sm;
+  @apply my-2 whitespace-pre-wrap rounded-r-md border-l-4 border-accent-600 bg-accent-50/60 px-3 py-2 text-sm;
 }
 .note-warn {
   @apply rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900;
@@ -53,5 +71,59 @@ body {
   @apply rounded-md bg-red-50 px-3 py-2 text-sm text-red-900;
 }
 .note-good {
-  @apply rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900;
+  @apply rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-900;
+}
+
+
+/* Shared layout and interaction tokens. Purple #722F99 requested by the owner. */
+html { scroll-padding-top: 8rem; }
+body { background: var(--color-canvas); }
+button, a, summary, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--color-accent-700); outline-offset: 3px; }
+button, summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent-700); flex-shrink: 0; }
+.card, .quote { overflow-wrap: anywhere; }
+.card :where(.flex-1, label, form) { min-width: 0; }
+.key-tag { @apply inline-block rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-accent-800; }
+.disclosure { padding: 0; scroll-margin-top: 8rem; }
+.disclosure-heading { @apply flex list-none items-start gap-3 rounded-panel p-4 text-sm sm:p-5; }
+.disclosure-heading::-webkit-details-marker { display: none; }
+.disclosure-heading:hover { background: #faf8fc; }
+.disclosure-chevron { width: 7px; height: 7px; border-right: 2px solid #726779; border-bottom: 2px solid #726779; transform: rotate(-45deg); margin-top: 6px; flex-shrink: 0; }
+.disclosure[open] > summary .disclosure-chevron { transform: rotate(45deg); }
+.disclosure-body { @apply border-t border-line p-4 sm:p-5; }
+.quick-start { @apply mb-4 flex flex-wrap items-center justify-between gap-3 rounded-panel border border-accent-200 bg-accent-50/60 p-4 text-sm leading-relaxed text-accent-950; }
+.quick-start > div { flex: 1; min-width: 220px; }
+.strategy-toolbar { @apply sticky top-2 z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-panel border border-line bg-white/95 p-3 shadow-sm backdrop-blur; }
+.strategy-toolbar .btn, .strategy-toolbar .btn-secondary { min-height: 40px; }
+.group-heading { @apply mb-3 flex items-start gap-3; }
+.group-number { @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-700 text-sm font-semibold text-white; }
+.result-disclosure { @apply border-t border-line pt-3; }
+.result-disclosure > summary { @apply cursor-pointer py-2 font-semibold; }
+.result-disclosure > .result-body { @apply pt-3; }
+@media (max-width: 639px) {
+  .input, .select, .textarea { font-size: 16px; }
+  .strategy-toolbar { top: 0; margin-inline: -0.25rem; }
+  .strategy-toolbar > p { display: none; }
+  .strategy-toolbar > div { width: 100%; }
+  .strategy-toolbar form { flex: 1; }
+  .strategy-toolbar button { width: 100%; }
+}
+
+.responsive-table { border-collapse: collapse; }
+.responsive-table th { padding: 0.5rem 0.75rem; font-weight: 500; }
+.responsive-table td { padding: 0.85rem 0.75rem; vertical-align: top; }
+.responsive-table tbody tr:hover { background: #faf8fc; }
+.nav-link { @apply inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100; }
+.nav-link[aria-current="page"] { @apply bg-accent-50 text-accent-900; box-shadow: inset 0 -2px var(--color-accent-700); }
+.app-nav { @apply flex min-w-0 gap-1 overflow-x-auto; scrollbar-width: thin; }
+@media (max-width: 639px) {
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; width: 100%; max-width: none; }
+  .responsive-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .responsive-table tr { padding: 0.75rem 0; }
+  .responsive-table td { padding: 0.4rem 0; }
+  .responsive-table td::before { content: attr(data-label); display: block; color: #706577; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .app-nav { margin-inline: -1rem; padding-inline: 1rem; padding-bottom: 0.25rem; }
+  .nav-link { padding-inline: 0.65rem; font-size: 0.8rem; }
 }
