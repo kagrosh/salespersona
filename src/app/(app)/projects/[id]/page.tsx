@@ -21,8 +21,8 @@ function InventoryFields({ item }: { item?: InventoryRow }) {
       <Field label="Reference (unit / plot)"><input name="reference" className="input" required defaultValue={item?.reference ?? ""} /></Field>
       <Field label="Category"><input name="category" className="input" defaultValue={item?.category ?? ""} /></Field>
       <Field label="Characteristics"><input name="characteristics" className="input" defaultValue={item?.characteristics ?? ""} placeholder="2+1, 95 m², sea view…" /></Field>
-      <Field label="Asking price"><input name="asking_price" className="input" inputMode="decimal" defaultValue={minorToDecimalString(item?.asking_price_minor)} /></Field>
-      <Field label="Currency"><Select name="currency" defaultValue={item?.currency ?? "EUR"} options={CURRENCIES} /></Field>
+      <Field keyField label="Asking price"><input name="asking_price" className="input" inputMode="decimal" defaultValue={minorToDecimalString(item?.asking_price_minor)} /></Field>
+      <Field keyField label="Currency"><Select name="currency" defaultValue={item?.currency ?? "EUR"} options={CURRENCIES} /></Field>
       <Field label="Other acquisition costs" hint="Blank = unknown (never assumed zero)."><input name="other_costs" className="input" inputMode="decimal" defaultValue={minorToDecimalString(item?.other_costs_minor)} /></Field>
       <Field label="Availability"><Select name="availability" defaultValue={item?.availability ?? "unknown"} options={AVAIL_OPTIONS} /></Field>
       <Field label="Source of price/availability"><input name="source" className="input" defaultValue={item?.source ?? ""} placeholder="Developer price list 12 Sep" /></Field>
@@ -32,7 +32,7 @@ function InventoryFields({ item }: { item?: InventoryRow }) {
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Price valid until" hint="Documented price-list validity."><input name="price_valid_until" type="date" className="input" defaultValue={item?.price_valid_until ?? ""} /></Field>
           <Field label="Price change note (with source)" className="sm:col-span-2" hint="e.g. 'developer list rises 3% at slab completion — price list 12 Sep'."><input name="price_change_note" className="input" defaultValue={item?.price_change_note ?? ""} /></Field>
-          <Field label="Comparable units left (count)" hint="Documented count only."><input name="availability_count" className="input" inputMode="numeric" defaultValue={item?.availability_count ?? ""} /></Field>
+          <Field label="Comparable units left (count)" hint="Documented count only."><input name="availability_count" type="number" min="0" step="1" className="input" inputMode="numeric" defaultValue={item?.availability_count ?? ""} /></Field>
           <Field label="Availability source (required with a count)" className="sm:col-span-2"><input name="availability_source" className="input" defaultValue={item?.availability_source ?? ""} placeholder="Seller's availability list, 14 Sep" /></Field>
           <Field label="Stage-linked payment / price milestone (documented)" className="sm:col-span-3"><input name="stage_payment_note" className="input" defaultValue={item?.stage_payment_note ?? ""} placeholder="20% at contract, 30% at roof — per payment schedule on file" /></Field>
         </div>
@@ -104,13 +104,13 @@ export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
         <Card id="evidence" title={`Evidence and claims (${evidence.length})`}>
           <p className="mb-3 text-xs text-neutral-500">Every selling point is a supplied claim until someone verifies it. Verification requires a source and date. A sales book never verifies a project fact.</p>
           {evidence.length === 0 ? <Empty>No claims recorded.</Empty> : (
-            <table className="mb-4 w-full text-sm">
+            <table className="responsive-table mb-4 w-full text-sm">
               <thead className="text-left text-xs text-neutral-500"><tr><th className="py-1">Statement</th><th>Source</th><th>Date</th><th>Status</th></tr></thead>
               <tbody className="divide-y divide-neutral-100">
                 {evidence.map((e) => (
                   <tr key={e.id}>
-                    <td className="py-2">{e.statement}</td><td>{e.source ?? "—"}</td><td><DateText value={e.source_date} /></td>
-                    <td>
+                    <td data-label="Statement" className="py-2">{e.statement}</td><td data-label="Source">{e.source ?? "—"}</td><td data-label="Date"><DateText value={e.source_date} /></td>
+                    <td data-label="Status">
                       <form action={setEvidenceStatus} className="flex gap-1">
                         <input type="hidden" name="project_id" value={p.id} /><input type="hidden" name="id" value={e.id} />
                         <Select name="status" defaultValue={e.status} options={EVIDENCE_OPTIONS} />
