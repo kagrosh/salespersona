@@ -55,7 +55,7 @@ export default async function OverviewPage() {
   const soon = dateFromNow(3);
   const week = dateFromNow(7);
 
-  const [overdue, dueToday, opps, acts, openTasks, options, recent, runs] = await Promise.all([
+  const [overdue, dueToday, opps, acts, openTasks, options, recent, runs, customers] = await Promise.all([
     supabase.from("tasks").select("*, opportunities(title), customers(full_name)").eq("workspace_id", workspaceId).eq("state", "open").lt("due_at", nowIso).order("due_at").limit(20),
     supabase.from("tasks").select("*, opportunities(title), customers(full_name)").eq("workspace_id", workspaceId).eq("state", "open").gte("due_at", nowIso).lte("due_at", endOfToday.toISOString()).order("due_at").limit(20),
     supabase.from("opportunities").select("*, customers(full_name)").eq("workspace_id", workspaceId).neq("stage", "won").order("updated_at", { ascending: false }).limit(500),
@@ -64,7 +64,9 @@ export default async function OverviewPage() {
     supabase.from("opportunity_options").select("opportunity_id, quote_valid_until, terms_source, status, inventory_items(reference, price_valid_until)").eq("workspace_id", workspaceId).in("status", ["candidate", "preferred"]),
     supabase.from("activities").select("*, customers(full_name), opportunities(title)").eq("workspace_id", workspaceId).order("occurred_at", { ascending: false }).limit(10),
     supabase.from("strategy_runs").select("id, opportunity_id, status, created_at").eq("workspace_id", workspaceId).neq("status", "failed").order("created_at", { ascending: false }).limit(2000),
+    supabase.from("customers").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
   ]);
+  const isEmptyWorkspace = (customers.count ?? 0) === 0 && (opps.data ?? []).length === 0;
 
   const rows = (opps.data ?? []) as OppJoined[];
   // Latest activity per opportunity (rows arrive newest-first, so the first hit wins). No SQL group-by needed.
@@ -102,6 +104,23 @@ export default async function OverviewPage() {
   return (
     <>
       <PageHeader title="Today" subtitle="Follow-ups first. Derived from recorded dates only; no scores." actions={<Link href="/opportunities/new" className="btn">New opportunity</Link>} />
+      {isEmptyWorkspace && (
+        <Card title="Welcome. Three steps to your first strategy" className="mb-6">
+          <ol className="grid gap-3 sm:grid-cols-3">
+            {[
+              { n: 1, t: "Add a customer", d: "Name, contact and preferred language.", href: "/customers/new", a: "New customer" },
+              { n: 2, t: "Add a project and a unit", d: "Price, currency, costs and availability.", href: "/projects/new", a: "New project" },
+              { n: 3, t: "Open an opportunity", d: "Attach the unit, record the budget, generate.", href: "/opportunities/new", a: "New opportunity" },
+            ].map((s) => (
+              <li key={s.n} className="flex gap-3">
+                <span className="group-number" aria-hidden="true">{s.n}</span>
+                <span className="min-w-0"><span className="block font-semibold">{s.t}</span><span className="block text-sm text-neutral-700">{s.d}</span><Link href={s.href} className="mt-1 inline-block text-sm underline">{s.a}</Link></span>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 text-sm text-neutral-700">The full guide, including how to read a strategy and what the app will never do, is under <Link href="/help" className="underline">Help</Link>.</p>
+        </Card>
+      )}
       <nav aria-label="Today sections" className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[{id:"overdue",label:"Overdue",count:overdue.data?.length ?? 0},{id:"due-today",label:"Due today",count:dueToday.data?.length ?? 0},{id:"stalled",label:"Stalled",count:stalled.length},{id:"current-strategies",label:"Current strategies",count:currentStrategies.length}].map((item) => <a key={item.id} href={`#${item.id}`} className="card hover:border-accent-600"><span className="block text-2xl font-semibold">{item.count}</span><span className="mt-1 block text-sm text-neutral-600">{item.label}</span></a>)}
       </nav>

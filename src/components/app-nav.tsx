@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV = [{ href: "/", label: "Overview" }, { href: "/opportunities", label: "Opportunities" }, { href: "/customers", label: "Customers" }, { href: "/projects", label: "Projects" }, { href: "/tasks", label: "Tasks" }];
+const NAV = [{ href: "/", label: "Today" }, { href: "/opportunities", label: "Opportunities" }, { href: "/customers", label: "Customers" }, { href: "/projects", label: "Projects" }, { href: "/tasks", label: "Tasks" }, { href: "/help", label: "Help" }];
 
 export function AppNav() {
   const pathname = usePathname();
