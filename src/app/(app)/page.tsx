@@ -15,11 +15,11 @@ const ACTIVE = new Set(["new", "discovery", "qualified", "shortlist", "visit", "
 
 function TaskList({ rows }: { rows: TaskJoined[] }) {
   return rows.length === 0 ? (
-    <Empty>Nothing here.</Empty>
+    <Empty>No follow-ups in this group. <Link href="/tasks" className="underline">Review all tasks</Link>.</Empty>
   ) : (
     <ul className="divide-y divide-neutral-100 text-sm">
       {rows.map((t) => (
-        <li key={t.id} className="flex items-start justify-between gap-3 py-2">
+        <li key={t.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
           <div>
             <div>{t.action}</div>
             <div className="text-xs text-neutral-500">
@@ -55,7 +55,7 @@ export default async function OverviewPage() {
   const soon = dateFromNow(3);
   const week = dateFromNow(7);
 
-  const [overdue, dueToday, opps, acts, openTasks, options, recent] = await Promise.all([
+  const [overdue, dueToday, opps, acts, openTasks, options, recent, runs] = await Promise.all([
     supabase.from("tasks").select("*, opportunities(title), customers(full_name)").eq("workspace_id", workspaceId).eq("state", "open").lt("due_at", nowIso).order("due_at").limit(20),
     supabase.from("tasks").select("*, opportunities(title), customers(full_name)").eq("workspace_id", workspaceId).eq("state", "open").gte("due_at", nowIso).lte("due_at", endOfToday.toISOString()).order("due_at").limit(20),
     supabase.from("opportunities").select("*, customers(full_name)").eq("workspace_id", workspaceId).neq("stage", "won").order("updated_at", { ascending: false }).limit(500),
@@ -63,6 +63,7 @@ export default async function OverviewPage() {
     supabase.from("tasks").select("opportunity_id, due_at, action").eq("workspace_id", workspaceId).eq("state", "open").not("opportunity_id", "is", null),
     supabase.from("opportunity_options").select("opportunity_id, quote_valid_until, terms_source, status, inventory_items(reference, price_valid_until)").eq("workspace_id", workspaceId).in("status", ["candidate", "preferred"]),
     supabase.from("activities").select("*, customers(full_name), opportunities(title)").eq("workspace_id", workspaceId).order("occurred_at", { ascending: false }).limit(10),
+    supabase.from("strategy_runs").select("id, opportunity_id, status, created_at").eq("workspace_id", workspaceId).neq("status", "failed").order("created_at", { ascending: false }).limit(2000),
   ]);
 
   const rows = (opps.data ?? []) as OppJoined[];
@@ -94,11 +95,24 @@ export default async function OverviewPage() {
   expiring.sort((a, b) => a.date.localeCompare(b.date));
   const activeSorted = [...active].sort((a, b) => (days(b) ?? 99999) - (days(a) ?? 99999));
 
+  const latestRuns = new Map<string, { id: string; opportunity_id: string; status: string; created_at: string }>();
+  for (const run of runs.data ?? []) if (!latestRuns.has(run.opportunity_id)) latestRuns.set(run.opportunity_id, run);
+  const currentStrategies = active.filter((o) => latestRuns.get(o.id)?.status === "valid");
+
   return (
     <>
-      <PageHeader title="Work overview" subtitle="Follow-ups first. Derived from recorded dates only; no scores." actions={<Link href="/opportunities/new" className="btn">New opportunity</Link>} />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card title={`Stalled deals (${stalled.length}) — no activity for ${STALL_DAYS}+ days`}>
+      <PageHeader title="Today" subtitle="Follow-ups first. Derived from recorded dates only; no scores." actions={<Link href="/opportunities/new" className="btn">New opportunity</Link>} />
+      <nav aria-label="Today sections" className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[{id:"overdue",label:"Overdue",count:overdue.data?.length ?? 0},{id:"due-today",label:"Due today",count:dueToday.data?.length ?? 0},{id:"stalled",label:"Stalled",count:stalled.length},{id:"current-strategies",label:"Current strategies",count:currentStrategies.length}].map((item) => <a key={item.id} href={`#${item.id}`} className="card hover:border-accent-600"><span className="block text-2xl font-semibold">{item.count}</span><span className="mt-1 block text-sm text-neutral-600">{item.label}</span></a>)}
+      </nav>
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <Card id="overdue" title={`Overdue follow-ups (${overdue.data?.length ?? 0})`}>
+          <TaskList rows={(overdue.data ?? []) as TaskJoined[]} />
+        </Card>
+        <Card id="due-today" title={`Due today (${dueToday.data?.length ?? 0})`}>
+          <TaskList rows={(dueToday.data ?? []) as TaskJoined[]} />
+        </Card>
+        <Card id="stalled" title={`Stalled deals (${stalled.length}) — no activity for ${STALL_DAYS}+ days`}>
           {stalled.length === 0 ? <Empty>Every active deal was touched in the last {STALL_DAYS} days.</Empty> : (
             <ul className="divide-y divide-neutral-100 text-sm">
               {stalled.slice(0, 20).map((o) => (
@@ -120,6 +134,12 @@ export default async function OverviewPage() {
                 </OppLine>
               ))}
             </ul>
+          )}
+        </Card>
+        <Card id="current-strategies" title={`Current strategies (${currentStrategies.length})`}>
+          <p className="mb-3 text-xs text-neutral-600">Latest non-failed runs marked current. Review the recorded inputs before using a draft.</p>
+          {currentStrategies.length === 0 ? <Empty>No current strategy on an active deal. <Link href="/opportunities" className="underline">Open an opportunity</Link> and generate one.</Empty> : (
+            <ul className="divide-y divide-neutral-100 text-sm">{currentStrategies.map((o) => <OppLine key={o.id} o={o}><span className="badge badge-good">current</span><DateText value={latestRuns.get(o.id)?.created_at} withTime /><Link href={`/opportunities/${o.id}#strategy`} className="underline">Review the ask</Link></OppLine>)}</ul>
           )}
         </Card>
         <Card title={`Re-contact due (${recontact.length}) — agreed dates within 3 days`}>
@@ -162,12 +182,6 @@ export default async function OverviewPage() {
             </ul>
           )}
           <p className="mt-2 text-xs text-neutral-500">A win-back needs a recorded change that addresses the lost reason, or the customer&apos;s own revisit date. Refusals of contact never appear here.</p>
-        </Card>
-        <Card title={`Overdue follow-ups (${overdue.data?.length ?? 0})`}>
-          <TaskList rows={(overdue.data ?? []) as TaskJoined[]} />
-        </Card>
-        <Card title={`Due today (${dueToday.data?.length ?? 0})`}>
-          <TaskList rows={(dueToday.data ?? []) as TaskJoined[]} />
         </Card>
         <Card title={`Active opportunities (${activeSorted.length}) — oldest contact first`}>
           {activeSorted.length === 0 ? (
